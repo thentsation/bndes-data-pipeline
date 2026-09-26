@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.3 (2026-09-26)
+
+### Bug Fixes
+
+- Cap numpy below 2.3 - no wheels for this Lambda image at all
+  ([`bbfe901`](https://github.com/thentsation/bndes-data-pipeline/commit/bbfe9013ffe93f30a138ea3a7f5cdb9f2172e43e))
+
+
 ## v1.0.2 (2026-09-26)
 
 ### Bug Fixes
