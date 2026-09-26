@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.0.5 (2026-09-26)
+
+### Bug Fixes
+
+- Revert lambda/python 3.14 bump a third time, block all versions
+  ([`ca37854`](https://github.com/thentsation/bndes-data-pipeline/commit/ca37854c48c1032da5dd304eaec129790e221a2f))
+
+### Chores
+
+- **deps**: Bump lambda/python from 3.11 to 3.14
+  ([#14](https://github.com/thentsation/bndes-data-pipeline/pull/14),
+  [`8176c46`](https://github.com/thentsation/bndes-data-pipeline/commit/8176c4692f14f7478dc145a50fab99d0b6d9f57a))
+
+
 ## v1.0.4 (2026-09-26)
 
 ### Bug Fixes
