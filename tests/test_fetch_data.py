@@ -1,5 +1,5 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from src.fetch_data import fetch_resources_by_year
 
 # Mock data for package_show
@@ -82,3 +82,22 @@ def test_fetch_resources_no_match(mock_get):
     results = list(generator)
 
     assert len(results) == 0
+
+
+@patch("src.fetch_data.requests.get")
+def test_fetch_resources_matching_resource_with_no_records(mock_get):
+    """Covers the branch where a matching resource's datastore has no records."""
+
+    mock_response_pkg = MagicMock()
+    mock_response_pkg.json.return_value = MOCK_PACKAGE_SHOW
+    mock_response_pkg.raise_for_status.return_value = None
+
+    mock_response_ds = MagicMock()
+    mock_response_ds.json.return_value = {"result": {"records": []}}
+    mock_response_ds.raise_for_status.return_value = None
+
+    mock_get.side_effect = [mock_response_pkg, mock_response_ds]
+
+    results = list(fetch_resources_by_year(2023))
+
+    assert results == []
