@@ -34,4 +34,5 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          skip-dirs: var/lang/lib/python3.11/site-packages/pip/_vendor
+          skip-dirs: '**/site-packages/pip/_vendor'
+          trivyignores: '.trivyignore'
