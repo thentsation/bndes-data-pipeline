@@ -1,12 +1,24 @@
 name: 04 - Docker Build & Run Test
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'notebooks/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'notebooks/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   docker-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Build Docker Image
         run: docker build -t bndes-lambda .
@@ -23,6 +35,6 @@ jobs:
         run: |
           # Envia um payload de teste para ver se a função não crasha na inicialização
           curl -v -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"year": 2023}' || exit 1
-          
+
           # Verifica logs se houve erro
           docker logs lambda-test
