@@ -1,4 +1,9 @@
 .vscode
-__pycache__
+.idea
+__pycache__/
+*.pyc
 .venv
-.pytest_cache
+.pytest_cache/
+.coverage
+.env
+data/
