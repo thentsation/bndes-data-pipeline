@@ -21,7 +21,11 @@ jobs:
         uses: astral-sh/setup-uv@v10.2.0
 
       - name: Regenerate lockfile
-        run: uv pip compile requirements.txt -o requirements.lock --universal
+        # --python-version 3.11 matches the Lambda's actual runtime
+        # (public.ecr.aws/lambda/python:3.11) - without it, uv resolves
+        # against whatever Python the runner defaults to and can pick
+        # versions (numpy, pyarrow) with no 3.11 wheels at all.
+        run: uv pip compile requirements.txt -o requirements.lock --universal --python-version 3.11
 
       - name: Audit updated lockfile
         id: audit
