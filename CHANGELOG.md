@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.0.4 (2026-09-26)
+
+### Bug Fixes
+
+- Ignore CVEs Trivy flags that aren't fixable or reachable here
+  ([`54f8004`](https://github.com/thentsation/bndes-data-pipeline/commit/54f80043202cb2d7daf707e6a527b605876550db))
+
+- Revert numpy>=2.5.3 auto-merge, ignore that range in dependabot
+  ([`3939c68`](https://github.com/thentsation/bndes-data-pipeline/commit/3939c688b696310f6c6bce959a45cde3980e3e2c))
+
+### Chores
+
+- **deps**: Update numpy requirement from <2.3,>=1.26 to >=2.5.3,<2.6
+  ([#13](https://github.com/thentsation/bndes-data-pipeline/pull/13),
+  [`6538770`](https://github.com/thentsation/bndes-data-pipeline/commit/6538770b12e31f1a4a72d8cadc75276be95472da))
+
+
 ## v1.0.3 (2026-09-26)
 
 ### Bug Fixes
