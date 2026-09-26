@@ -1,6 +1,23 @@
 # BNDES Balance Sheet - Production AWS Architecture
 
+[![01 - Code Quality & Lint](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml)
+[![02 - Unit Tests](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/02-unit-tests.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/02-unit-tests.yml)
+
+An in-depth write-up of the productization of this project — a fetch failure that was silently swallowed and reported as "no data" instead of an error — is available in [ARTIGO.md](ARTIGO.md) (pt-br) / [ARTIGO.en-us.md](ARTIGO.en-us.md) (en-us).
+
 This project implements a production-ready system for fetching, processing, and storing BNDES balance sheet data on AWS using serverless technologies. The system automatically retrieves data from the BNDES Open Data API, processes it for consistency, and stores the processed data in S3 as Parquet files with date partitioning.
+
+## Local development
+
+```bash
+make install        # creates .venv, installs requirements.txt + requirements-dev.txt
+make test           # pytest, 90% coverage gate
+make lint            # ruff check
+make typecheck        # mypy
+make docker-run        # builds the Lambda image and runs it locally against LOCAL_OUTPUT_DIR
+```
+
+CI (`01`-`04`) runs ruff + mypy + pip-audit, pytest across Python 3.11/3.12, a Trivy scan of the Lambda image, and a real build+run smoke test (POSTs a test payload to the Lambda Runtime Interface Emulator). Dependabot covers pip, the Lambda's Docker base image, Terraform providers/modules, and GitHub Actions. `terraform plan`/`apply`/`destroy` stay manual, human-triggered actions against real AWS infrastructure - nothing in CI touches them.
 
 ## Overview
 
