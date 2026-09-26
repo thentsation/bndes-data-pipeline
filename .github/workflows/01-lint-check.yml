@@ -77,4 +77,8 @@ jobs:
           pip install pip-audit==2.7.3
 
       - name: Audit dependencies
-        run: pip-audit -r requirements.lock
+        # PYSEC-2026-113: use-after-free in Arrow C++'s IPC file reader with
+        # pre-buffering enabled - the advisory itself states this isn't
+        # reachable from the Python bindings. Fix (23.0.1) has no wheels for
+        # this Lambda's Python 3.11 runtime yet.
+        run: pip-audit -r requirements.lock --ignore-vuln PYSEC-2026-113

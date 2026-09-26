@@ -24,6 +24,15 @@ updates:
     labels:
       - dependencies
       - docker
+    ignore:
+      # public.ecr.aws/lambda/python:3.11 -> :3.14 auto-merged as a "minor"
+      # bump (Dependabot treats bare version tags loosely) and broke the
+      # build - pandas/numpy/pyarrow had no wheels yet for the new runtime.
+      # Bumping the Lambda's Python version needs a deliberate, tested PR.
+      - dependency-name: "public.ecr.aws/lambda/python"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
 
   - package-ecosystem: terraform
     directory: /terraform

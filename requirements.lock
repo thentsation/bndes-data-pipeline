@@ -22,7 +22,7 @@ numpy==2.5.3
     #   pandas
 pandas==2.3.3
     # via -r requirements.txt
-pyarrow==23.0.1
+pyarrow==20.0.0
     # via -r requirements.txt
 python-dateutil==2.9.0.post0
     # via
