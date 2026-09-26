@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.0.2 (2026-09-26)
+
+### Bug Fixes
+
+- Pin the weekly lockfile refresh to Python 3.11 too
+  ([`42105e5`](https://github.com/thentsation/bndes-data-pipeline/commit/42105e503c13ba64d43c436b5ead656d6e0a735b))
+
+- Regenerate lockfile constrained to the Lambda's actual Python 3.11
+  ([`1210efb`](https://github.com/thentsation/bndes-data-pipeline/commit/1210efb355bfa59b37f655df3be993ae6aab9b4c))
+
+
 ## v1.0.1 (2026-09-26)
 
 ### Bug Fixes
