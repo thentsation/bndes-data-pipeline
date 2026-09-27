@@ -38,7 +38,10 @@ updates:
       # the build each time (pandas/numpy/pyarrow had no wheels for 3.14).
       # Ignoring every version blocks it outright; bumping this runtime
       # needs a deliberate, tested PR, not Dependabot.
-      - dependency-name: "public.ecr.aws/lambda/python"
+      # The name must be "lambda/python": Dependabot drops the registry
+      # host for ECR Public images, so "public.ecr.aws/lambda/python"
+      # never matched and every previous ignore here was a no-op.
+      - dependency-name: "lambda/python"
         versions: ["*"]
 
   - package-ecosystem: terraform
