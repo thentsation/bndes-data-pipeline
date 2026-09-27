@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.0.6 (2026-09-27)
+
+### Bug Fixes
+
+- Revert lambda/python 3.14 bump and match Dependabot's real dependency name
+  ([`7a622db`](https://github.com/thentsation/bndes-data-pipeline/commit/7a622db5323aa354e35707b826d7ec0fcf7920c1))
+
+### Chores
+
+- **deps**: Bump lambda/python from 3.11 to 3.14
+  ([#16](https://github.com/thentsation/bndes-data-pipeline/pull/16),
+  [`55df222`](https://github.com/thentsation/bndes-data-pipeline/commit/55df222925240913fcd0cebe8ce0fc39fc86eb80))
+
+
 ## v1.0.5 (2026-09-26)
 
 ### Bug Fixes
