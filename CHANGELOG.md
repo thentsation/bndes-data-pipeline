@@ -2,6 +2,51 @@
 
 <!-- version list -->
 
+## v1.0.9 (2026-09-28)
+
+### Bug Fixes
+
+- **ci**: Open lockfile PRs with RELEASE_PAT so CI runs on them
+  ([`cacf3a5`](https://github.com/thentsation/bndes-data-pipeline/commit/cacf3a5292bc07ed692d65ea5ab382c4e43b869b))
+
+### Chores
+
+- **deps**: Bump boto3-stubs from 1.43.100 to 1.43.102
+  ([#19](https://github.com/thentsation/bndes-data-pipeline/pull/19),
+  [`1e721fa`](https://github.com/thentsation/bndes-data-pipeline/commit/1e721fa02357cf908411ed93148911ce58a7e8ea))
+
+- **deps**: Bump ruff from 0.16.8 to 0.16.9
+  ([#21](https://github.com/thentsation/bndes-data-pipeline/pull/21),
+  [`97f399f`](https://github.com/thentsation/bndes-data-pipeline/commit/97f399fb9ae2ff9d33c435286f61a6624b8d2b4e))
+
+- **deps**: Ignore pandas 3 and pyarrow 21+ majors in dependabot
+  ([`8af6beb`](https://github.com/thentsation/bndes-data-pipeline/commit/8af6beb185efb39b94132bf88844a43061f66f55))
+
+- **deps**: Update boto3 requirement
+  ([#18](https://github.com/thentsation/bndes-data-pipeline/pull/18),
+  [`b26e683`](https://github.com/thentsation/bndes-data-pipeline/commit/b26e683e3c23c3187ddcf98bbd65e392d27a7c7e))
+
+- **deps**: Update numpy requirement from <2.3,>=1.26 to >=2.2.6,<2.3
+  ([#23](https://github.com/thentsation/bndes-data-pipeline/pull/23),
+  [`c8ae6f7`](https://github.com/thentsation/bndes-data-pipeline/commit/c8ae6f73cf3969fa79a775ffa8494244e880ce33))
+
+- **deps**: Update pandas requirement from <2.4,>=2.3 to >=2.3.3,<2.4
+  ([#20](https://github.com/thentsation/bndes-data-pipeline/pull/20),
+  [`da3cc1b`](https://github.com/thentsation/bndes-data-pipeline/commit/da3cc1b529f0788fc0d63b988eed65ee5e945da8))
+
+- **deps**: Update pyarrow requirement
+  ([#22](https://github.com/thentsation/bndes-data-pipeline/pull/22),
+  [`1ef07b3`](https://github.com/thentsation/bndes-data-pipeline/commit/1ef07b34b304c01e12b952dd15932236379b3e7e))
+
+- **deps**: Update requests requirement
+  ([#11](https://github.com/thentsation/bndes-data-pipeline/pull/11),
+  [`8cc55c7`](https://github.com/thentsation/bndes-data-pipeline/commit/8cc55c7fb52babb7dbb515ab1681cf66e879c00a))
+
+- **deps**: Update urllib3 requirement from <3.0,>=2.7 to >=2.8.0,<3.0
+  ([#15](https://github.com/thentsation/bndes-data-pipeline/pull/15),
+  [`a28d739`](https://github.com/thentsation/bndes-data-pipeline/commit/a28d7391d7e9f2ee0f72ae579843ecd6cdae38ce))
+
+
 ## v1.0.8 (2026-09-28)
 
 ### Bug Fixes
