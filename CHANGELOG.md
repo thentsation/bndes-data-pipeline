@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.8 (2026-09-28)
+
+### Bug Fixes
+
+- Use RELEASE_PAT so dependabot auto-merge can write to PRs
+  ([`b14146d`](https://github.com/thentsation/bndes-data-pipeline/commit/b14146dad253e777d133c0e5b4ecfea041c72ce2))
+
+
 ## v1.0.7 (2026-09-28)
 
 ### Bug Fixes
