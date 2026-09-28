@@ -39,10 +39,10 @@ updates:
       # Ignoring every version blocks it outright; bumping this runtime
       # needs a deliberate, tested PR, not Dependabot.
       # The name must be "lambda/python": Dependabot drops the registry
-      # host for ECR Public images, so "public.ecr.aws/lambda/python"
-      # never matched and every previous ignore here was a no-op.
+      # host for ECR Public images. No "versions" key: Docker tags have no
+      # range syntax, so versions: ["*"] matched nothing; omitting it is
+      # what ignores every version.
       - dependency-name: "lambda/python"
-        versions: ["*"]
 
   - package-ecosystem: terraform
     directory: /terraform
