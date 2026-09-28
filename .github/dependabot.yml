@@ -19,6 +19,13 @@ updates:
       # (<21.0) already caps it similarly for the same reason.
       - dependency-name: "numpy"
         versions: [">=2.3"]
+      # pandas 3 and pyarrow 21+ are major jumps that have to move together
+      # with the numpy ceiling above on the Lambda 3.11 runtime; that needs
+      # a deliberate, tested PR, not an auto-proposed bump.
+      - dependency-name: "pandas"
+        versions: [">=3.0"]
+      - dependency-name: "pyarrow"
+        versions: [">=21.0"]
 
   - package-ecosystem: docker
     directory: /
