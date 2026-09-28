@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.0.7 (2026-09-28)
+
+### Bug Fixes
+
+- Revert lambda/python 3.14 bump again and drop the no-op versions filter
+  ([`f696f16`](https://github.com/thentsation/bndes-data-pipeline/commit/f696f160c0c92d8681bd9ea09415819cea603956))
+
+### Chores
+
+- **deps**: Bump lambda/python from 3.11 to 3.14
+  ([#17](https://github.com/thentsation/bndes-data-pipeline/pull/17),
+  [`2f89dfd`](https://github.com/thentsation/bndes-data-pipeline/commit/2f89dfd35dc3403896d831c6a279cf7d9ea6e1ab))
+
+
 ## v1.0.6 (2026-09-27)
 
 ### Bug Fixes
