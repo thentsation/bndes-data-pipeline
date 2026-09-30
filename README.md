@@ -1,3 +1,5 @@
+[🇧🇷 Português](README.pt-br.md) | 🇺🇸 English
+
 # BNDES Balance Sheet - Production AWS Architecture
 
 An in-depth write-up of the productization of this project — a fetch failure that was silently swallowed and reported as "no data" instead of an error — is available in [ARTIGO.md](ARTIGO.md) (pt-br) / [ARTIGO.en-us.md](ARTIGO.en-us.md) (en-us).
@@ -187,6 +189,7 @@ bndes-data-pipeline/
 │   └── setup-terraform-backend.sh
 ├── docker-compose.yml         # Docker Compose for local development
 ├── README.md                   # This file
+├── README.pt-br.md             # Portuguese version
 └── .gitignore                  # Git ignore patterns
 ```
 
