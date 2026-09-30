@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: bndes-lambda-local
     ports:
-      - "9000:8080"
+      - "9010:8080"
     volumes:
       - ./data:/tmp/local_data
     environment:

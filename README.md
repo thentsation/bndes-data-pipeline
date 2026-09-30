@@ -536,7 +536,7 @@ Build the Docker image locally for testing:
 docker build -t bndes-data-pipeline:latest .
 
 # Run the container
-docker run -p 9000:8080 \
+docker run -p 9010:8080 \
   -e S3_BUCKET_NAME="test-bucket" \
   -e LOCAL_OUTPUT_DIR="/tmp/local_data" \
   bndes-data-pipeline:latest

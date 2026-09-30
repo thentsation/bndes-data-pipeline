@@ -32,7 +32,7 @@ docker-build:
 	docker build -t bndes-lambda .
 
 docker-run: docker-build
-	docker run --rm -p 9000:8080 \
+	docker run --rm -p 9010:8080 \
 		-e LOCAL_OUTPUT_DIR=/tmp/local_data \
 		-v $$(pwd)/data:/tmp/local_data \
 		bndes-lambda
