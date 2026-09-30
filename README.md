@@ -1,3 +1,5 @@
+[🇧🇷 Português](README.pt-br.md) | 🇺🇸 English
+
 # BNDES Balance Sheet - Production AWS Architecture
 
 [![01 - Code Quality & Lint](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml)
@@ -198,6 +200,7 @@ bndes-data-pipeline/
 ├── docker-compose.yml         # Docker Compose for local development
 ├── Dockerfile                  # Lambda Docker image
 ├── README.md                   # This file
+├── README.pt-br.md             # Portuguese version
 └── .gitignore                  # Git ignore patterns
 ```
 
