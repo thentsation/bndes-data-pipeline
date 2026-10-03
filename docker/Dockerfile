@@ -48,7 +48,7 @@ COPY --from=pytest-py311 /ok /pytest-py311.ok
 COPY --from=pytest-py312 /ok /pytest-py312.ok
 
 # Imagem da Lambda (publicada no ECR pelo Terraform, fora do Jenkins).
-FROM public.ecr.aws/lambda/python:3.11 AS runtime
+FROM public.ecr.aws/lambda/python:3.14 AS runtime
 
 RUN yum update -y && \
     yum clean all && \
