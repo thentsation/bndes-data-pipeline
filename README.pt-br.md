@@ -97,7 +97,7 @@ O sistema oferece:
 ### Detalhes dos componentes
 
 #### Função Lambda
-- **Runtime**: Python 3.11 em container Docker
+- **Runtime**: Python 3.14 em container Docker
 - **Timeout**: 900 segundos (15 minutos)
 - **Memória**: 1024 MB
 - **Gatilhos**: CloudWatch Events (expressão cron)
@@ -142,7 +142,7 @@ bndes-data-pipeline/
 │   ├── app.py                  # Entrypoint da Lambda com a lógica de upload para o S3
 │   ├── fetch_data.py           # Módulo de busca de dados na API do BNDES
 │   └── process_data.py         # Módulo de processamento e transformação de dados
-├── docker/Dockerfile           # Imagem da Lambda + stages de CI (target test)
+├── docker/Dockerfile           # Imagem da Lambda (Python 3.14) + stages de CI (target test)
 ├── config/                     # requirements.txt, requirements-dev.txt, requirements.lock
 ├── Jenkinsfile                 # Pipeline da plataforma (appPipeline)
 ├── data/                       # Diretório local de dados (no .gitignore)
@@ -235,7 +235,7 @@ Antes de começar, garanta que você tem:
 - **AWS CLI** instalado e configurado com credenciais
 - **Docker** instalado (para construir as imagens da Lambda)
 - **Terraform** >= 1.5.0 instalado
-- **Python 3.11** instalado
+- **Python 3.12+** instalado
 - **Conta no GitHub** (para CI/CD)
 - **jq** (opcional, para ler os outputs do Terraform)
 
@@ -444,7 +444,7 @@ O sistema acompanha estas métricas customizadas:
 
 CI e deploy rodam no Jenkins da plataforma (`Jenkinsfile` → `appPipeline` da Shared Library `platform`, repo devops-platform), disparados por webhooks. Sem GitHub Actions.
 
-- **PRs e branches** — validação do contrato; `docker build --target test` (`ruff check`, `ruff format --check`, `mypy`, `pytest` com cobertura ≥90%, versões das ferramentas no `config/requirements-dev.txt`); `pip-audit` no `config/requirements.lock`; Trivy (CRITICAL/HIGH) na imagem da Lambda; vulnerabilidades aceitas, se houver, ficam listadas com a justificativa no `Jenkinsfile`.
+- **PRs e branches** — validação do contrato; `docker build --target test` (`ruff check`, `ruff format --check`, `mypy`, `pytest` com cobertura ≥90% em Python 3.12 e 3.14, versões das ferramentas no `config/requirements-dev.txt`); `pip-audit` no `config/requirements.lock`; Trivy (CRITICAL/HIGH) na imagem da Lambda; vulnerabilidades aceitas, se houver, ficam listadas com a justificativa no `Jenkinsfile`.
 - **main** — tudo acima e depois build e smoke test da imagem da Lambda, release com o python-semantic-release (versão, CHANGELOG, tag e release no GitHub) e rebuild do portfolio. Também é reconstruída toda segunda para pegar patches de segurança. Nada é enviado para a AWS: a imagem vai para o ECR e a infraestrutura para a AWS só pelo `terraform apply`, rodado por um humano.
 - **Dependências** — Renovate (job `platform/renovate` no Jenkins, `renovate.json` → preset do devops-platform): atualizações diárias, manutenção semanal do lockfile, issue "Dependency Dashboard" e auto-merge de patch/minor depois que o Jenkins aprova.
 
