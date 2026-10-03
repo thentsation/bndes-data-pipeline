@@ -98,7 +98,7 @@ resource "aws_iam_role_policy" "lambda_dlq_policy" {
 
 resource "null_resource" "build_and_push_image" {
   triggers = {
-    dockerfile_hash = filesha1("${path.module}/../../../Dockerfile")
+    dockerfile_hash = filesha1("${path.module}/../../../docker/Dockerfile")
     app_hash        = filesha1("${path.module}/../../../src/app.py")
   }
 
@@ -115,7 +115,7 @@ resource "null_resource" "build_and_push_image" {
 
       aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-      docker build -t ${var.project_name}-lambda .
+      docker build --target runtime -f docker/Dockerfile -t ${var.project_name}-lambda .
       docker tag ${var.project_name}-lambda $REPO_URL:latest
 
       docker push $REPO_URL:latest
