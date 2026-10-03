@@ -1,3 +1,5 @@
+[🇧🇷 Português](README.pt-br.md) | 🇺🇸 English
+
 # BNDES Balance Sheet - Production AWS Architecture
 
 An in-depth write-up of the productization of this project — a fetch failure that was silently swallowed and reported as "no data" instead of an error — is available in [ARTIGO.md](ARTIGO.md) (pt-br) / [ARTIGO.en-us.md](ARTIGO.en-us.md) (en-us).
@@ -187,6 +189,7 @@ bndes-data-pipeline/
 │   └── setup-terraform-backend.sh
 ├── docker-compose.yml         # Docker Compose for local development
 ├── README.md                   # This file
+├── README.pt-br.md             # Portuguese version
 └── .gitignore                  # Git ignore patterns
 ```
 
@@ -572,7 +575,7 @@ The project implements multiple security best practices:
 ### Operational Security
 - **Audit Logging**: CloudWatch logs all Lambda executions
 - **Error Alerts**: SNS notifications for security-relevant errors
-- **Secrets Management**: Secrets stored in GitHub Secrets and AWS Secrets Manager
+- **Secrets Management**: Secrets stored in Jenkins credentials and AWS Secrets Manager
 
 ## Troubleshooting
 
@@ -674,7 +677,7 @@ aws sqs receive-message --queue-url <dlq-url>
 - [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
 - [AWS S3 Documentation](https://docs.aws.amazon.com/s3/)
 - [CloudWatch Documentation](https://docs.aws.amazon.com/cloudwatch/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/)
 - [Docker Documentation](https://docs.docker.com/)
 
 ### Internal Documentation
