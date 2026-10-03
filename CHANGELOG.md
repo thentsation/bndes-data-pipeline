@@ -2,6 +2,45 @@
 
 <!-- version list -->
 
+## v1.0.10 (2026-10-03)
+
+### Bug Fixes
+
+- **deps**: Lambda em Python 3.14 com pyarrow 25, numpy 2.5 e pandas 3
+  ([#40](https://github.com/thentsation/bndes-data-pipeline/pull/40),
+  [`1198a9a`](https://github.com/thentsation/bndes-data-pipeline/commit/1198a9acd555abc671ecf44b35c381b7e0663571))
+
+### Chores
+
+- Isolate lambda handler test output and add pt-br README (T-0012)
+  ([#28](https://github.com/thentsation/bndes-data-pipeline/pull/28),
+  [`243fb4c`](https://github.com/thentsation/bndes-data-pipeline/commit/243fb4c87a70d5aeb02d8fad230d19ff76289be6))
+
+- **deps**: Update dependency boto3-stubs to v1.43.108
+  ([#33](https://github.com/thentsation/bndes-data-pipeline/pull/33),
+  [`cc06f44`](https://github.com/thentsation/bndes-data-pipeline/commit/cc06f442b53f0c1a90f149ec96152dd24926aa64))
+
+- **deps**: Update dependency mypy to v2.4.0
+  ([#35](https://github.com/thentsation/bndes-data-pipeline/pull/35),
+  [`97cc1cb`](https://github.com/thentsation/bndes-data-pipeline/commit/97cc1cb185595831c08652c391329087a7e76b18))
+
+- **deps**: Update dependency ruff to v0.16.10
+  ([#34](https://github.com/thentsation/bndes-data-pipeline/pull/34),
+  [`97f9e3e`](https://github.com/thentsation/bndes-data-pipeline/commit/97f9e3e6eb65bc171fa022955144b352dc329782))
+
+### Continuous Integration
+
+- Pipeline da Shared Library da plataforma e Renovate
+  ([#31](https://github.com/thentsation/bndes-data-pipeline/pull/31),
+  [`81b1d32`](https://github.com/thentsation/bndes-data-pipeline/commit/81b1d325b298ee2c75b6f7c3beebd4cb552e4b6c))
+
+### Documentation
+
+- README pt-br no padrão da plataforma (Jenkins, config/, docker/)
+  ([#28](https://github.com/thentsation/bndes-data-pipeline/pull/28),
+  [`243fb4c`](https://github.com/thentsation/bndes-data-pipeline/commit/243fb4c87a70d5aeb02d8fad230d19ff76289be6))
+
+
 ## v1.0.9 (2026-09-28)
 
 ### Bug Fixes
