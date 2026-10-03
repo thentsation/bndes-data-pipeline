@@ -1,8 +1,5 @@
 # BNDES Balance Sheet - Production AWS Architecture
 
-[![01 - Code Quality & Lint](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml)
-[![02 - Unit Tests](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/02-unit-tests.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/02-unit-tests.yml)
-
 An in-depth write-up of the productization of this project — a fetch failure that was silently swallowed and reported as "no data" instead of an error — is available in [ARTIGO.md](ARTIGO.md) (pt-br) / [ARTIGO.en-us.md](ARTIGO.en-us.md) (en-us).
 
 This project implements a production-ready system for fetching, processing, and storing BNDES balance sheet data on AWS using serverless technologies. The system automatically retrieves data from the BNDES Open Data API, processes it for consistency, and stores the processed data in S3 as Parquet files with date partitioning.
@@ -10,14 +7,14 @@ This project implements a production-ready system for fetching, processing, and 
 ## Local development
 
 ```bash
-make install        # creates .venv, installs requirements.txt + requirements-dev.txt
+make install        # creates .venv, installs config/requirements.txt + config/requirements-dev.txt
 make test           # pytest, 90% coverage gate
 make lint            # ruff check
 make typecheck        # mypy
 make docker-run        # builds the Lambda image and runs it locally against LOCAL_OUTPUT_DIR
 ```
 
-CI (`01`-`04`) runs ruff + mypy + pip-audit, pytest across Python 3.11/3.12, a Trivy scan of the Lambda image, and a real build+run smoke test (POSTs a test payload to the Lambda Runtime Interface Emulator). Dependabot covers pip, the Lambda's Docker base image, Terraform providers/modules, and GitHub Actions. `terraform plan`/`apply`/`destroy` stay manual, human-triggered actions against real AWS infrastructure - nothing in CI touches them.
+CI runs on the platform's Jenkins (see [CI/CD Pipeline](#cicd-pipeline)). `terraform plan`/`apply`/`destroy` stay manual, human-triggered actions against real AWS infrastructure - nothing in CI touches them.
 
 ## Overview
 
@@ -42,7 +39,7 @@ The system provides:
 - **Comprehensive Monitoring**: CloudWatch logs, custom metrics, alarms, and dashboards
 - **Alert System**: SNS notifications for failures, errors, and metric thresholds
 - **Error Handling**: Dead Letter Queue (SQS) for failed Lambda executions
-- **CI/CD Pipeline**: Automated testing, security scanning, building, and deployment via GitHub Actions
+- **CI/CD Pipeline**: Automated linting, testing, security scanning and image build on the platform's Jenkins
 - **Security**: KMS encryption, least-privilege IAM policies, versioned state, no hardcoded credentials
 - **Infrastructure as Code**: Complete Terraform configuration with modular architecture
 
@@ -143,8 +140,9 @@ bndes-data-pipeline/
 │   ├── app.py                  # Lambda entrypoint with S3 upload logic
 │   ├── fetch_data.py           # BNDES API data fetching module
 │   └── process_data.py         # Data processing and transformation module
-├── Dockerfile                  # Docker image for Lambda (Python 3.11)
-├── requirements.txt            # Python dependencies
+├── docker/Dockerfile           # Lambda image (Python 3.11) + CI stages (target test)
+├── config/                     # requirements.txt, requirements-dev.txt, requirements.lock
+├── Jenkinsfile                 # Platform pipeline (appPipeline)
 ├── data/                       # Local data directory (gitignored)
 │   └── bndes-data/
 │       └── 2026/
@@ -187,16 +185,7 @@ bndes-data-pipeline/
 │   └── test_process_data.py
 ├── scripts/                    # Utility scripts
 │   └── setup-terraform-backend.sh
-├── .github/
-│   └── workflows/              # GitHub Actions CI/CD pipelines
-│       ├── 01-lint-check.yml          # Code quality checks
-│       ├── 02-unit-tests.yml          # Unit tests with coverage
-│       ├── 03-security-scan.yml       # Security scanning
-│       ├── 04-docker-build-test.yml   # Docker build and test
-│       ├── 05-terraform-plan.yml      # Terraform plan (PRs)
-│       └── 06-deploy.yml              # Deployment to production
 ├── docker-compose.yml         # Docker Compose for local development
-├── Dockerfile                  # Lambda Docker image
 ├── README.md                   # This file
 └── .gitignore                  # Git ignore patterns
 ```
@@ -257,7 +246,7 @@ cd bndes-data-pipeline
 ### 2. Install Python Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r config/requirements.txt
 ```
 
 ### 3. Set Up Terraform Backend
@@ -311,7 +300,7 @@ REGION=$(terraform output aws_region)
 aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_URI
 
 # Build the image
-docker build -t bndes-data-pipeline:latest .
+docker build --target runtime -f docker/Dockerfile -t bndes-data-pipeline:latest .
 
 # Tag the image
 docker tag bndes-data-pipeline:latest $ECR_URI:latest
@@ -450,62 +439,11 @@ The system tracks these custom metrics:
 
 ## CI/CD Pipeline
 
-The project includes a complete CI/CD pipeline using GitHub Actions, split into modular workflows:
+CI and deploy run on the platform's Jenkins (`Jenkinsfile` → `appPipeline` from the `platform` Shared Library, repo devops-platform), triggered by webhooks; there are no GitHub Actions.
 
-### 1. Lint Check Workflow (`01-lint-check.yml`)
-- **Trigger**: Push and pull requests
-- **Purpose**: Ensures code quality and consistency
-- **Tools**: 
-  - Black (code formatting)
-  - Flake8 (linting)
-  - MyPy (type checking)
-
-### 2. Unit Tests Workflow (`02-unit-tests.yml`)
-- **Trigger**: Push and pull requests
-- **Purpose**: Validates code functionality
-- **Tools**: Pytest with coverage reporting
-- **Output**: Codecov integration
-
-### 3. Security Scan Workflow (`03-security-scan.yml`)
-- **Trigger**: Push and pull requests
-- **Purpose**: Identifies security vulnerabilities
-- **Tool**: Trivy vulnerability scanner
-- **Scope**: Docker images, dependencies
-
-### 4. Docker Build Workflow (`04-docker-build-test.yml`)
-- **Trigger**: Push and pull requests
-- **Purpose**: Validates Docker image build
-- **Tests**: Container health checks
-
-### 5. Terraform Plan Workflow (`05-terraform-plan.yml`)
-- **Trigger**: Pull requests targeting main/develop
-- **Purpose**: Generates infrastructure plan for review
-- **Backend**: Uses local backend (no S3 access needed)
-- **Output**: PR comment with plan details
-
-### 6. Deploy Workflow (`06-deploy.yml`)
-- **Trigger**: Push to main branch
-- **Purpose**: Deploys infrastructure changes to production
-- **Backend**: Uses S3 backend with state locking
-- **Process**: 
-  1. Builds and pushes Docker image to ECR
-  2. Initializes Terraform with S3 backend
-  3. Applies Terraform changes
-
-### Required GitHub Secrets
-
-Configure these secrets in your GitHub repository settings:
-
-1. **AWS_ACCESS_KEY_ID**: AWS access key with appropriate permissions
-2. **AWS_SECRET_ACCESS_KEY**: AWS secret access key
-3. **TF_STATE_BUCKET**: S3 bucket name for Terraform state (optional)
-
-### GitHub Actions Permissions
-
-The workflows require the following GitHub repository permissions:
-- `contents: read` (for checkout)
-- `pull-requests: write` (for PR comments)
-- `issues: write` (for PR comments)
+- **PRs and branches** — contract validation; `docker build --target test` (`ruff check`, `ruff format --check`, `mypy`, `pytest` with ≥90% coverage on Python 3.11 and 3.12, tool versions from `config/requirements-dev.txt`); `pip-audit` on `config/requirements.lock`; Trivy (CRITICAL/HIGH) on the Lambda image; accepted vulnerabilities are listed with their justification in the `Jenkinsfile`.
+- **main** — all of the above, then build and smoke test of the Lambda image, release with python-semantic-release (version, CHANGELOG, tag and GitHub release) and a rebuild of the portfolio. Also rebuilt every Monday to pick up security patches. Nothing is pushed to AWS: the image goes to ECR and the infrastructure to AWS only through `terraform apply`, run by a human.
+- **Dependencies** — Renovate (Jenkins job `platform/renovate`, `renovate.json` → devops-platform preset): daily updates, weekly lockfile maintenance, Dependency Dashboard issue and auto-merge of patch/minor after Jenkins passes.
 
 ## Local Development
 
@@ -533,7 +471,7 @@ Build the Docker image locally for testing:
 
 ```bash
 # Build the image
-docker build -t bndes-data-pipeline:latest .
+docker build --target runtime -f docker/Dockerfile -t bndes-data-pipeline:latest .
 
 # Run the container
 docker run -p 9000:8080 \

@@ -4,7 +4,7 @@ services:
   lambda:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: bndes-lambda-local
     ports:
       - "9000:8080"

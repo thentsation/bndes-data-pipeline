@@ -7,8 +7,8 @@ PIP := $(VENV)/bin/pip
 install:
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install -r requirements.txt
-	$(PIP) install -r requirements-dev.txt
+	$(PIP) install -r config/requirements.txt
+	$(PIP) install -r config/requirements-dev.txt
 
 run:
 	LOCAL_OUTPUT_DIR=./data $(PYTHON) -c "from src.app import lambda_handler; print(lambda_handler({'year': 2023}, None))"
@@ -29,7 +29,7 @@ typecheck:
 	$(VENV)/bin/mypy
 
 docker-build:
-	docker build -t bndes-lambda .
+	docker build --target runtime -f docker/Dockerfile -t bndes-lambda .
 
 docker-run: docker-build
 	docker run --rm -p 9000:8080 \
