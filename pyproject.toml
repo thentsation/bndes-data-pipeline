@@ -6,7 +6,7 @@ commit_message = 'chore(release): v{version} [skip ci]'
 match = 'main'
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 extend-exclude = ["*.md", "notebooks"]
 
 [tool.ruff.lint]
@@ -21,7 +21,7 @@ ignore = ["N999", "BLE001"]
 quote-style = "double"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 files = ["src"]
 mypy_path = "."
 explicit_package_bases = true

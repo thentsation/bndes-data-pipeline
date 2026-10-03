@@ -1,8 +1,8 @@
 # CI (o Jenkins roda docker build --target test): ruff, mypy e pytest com cobertura
-# mínima de 90% em Python 3.11 e 3.12, nas versões fixadas em config/requirements-dev.txt
+# mínima de 90% em Python 3.12 e 3.14 (a Lambda roda em 3.14), nas versões fixadas em config/requirements-dev.txt
 # (atualizadas pelo Renovate). pip-audit e Trivy rodam no pipeline da plataforma, fora do
 # cache de build, porque o resultado muda com as bases de vulnerabilidades.
-FROM python:3.11-slim AS lint
+FROM python:3.12-slim AS lint
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY . .
 
 RUN ruff check . && ruff format --check . && mypy && touch /ok
 
-FROM python:3.11-slim AS pytest-py311
+FROM python:3.14-slim AS pytest-py314
 
 WORKDIR /app
 
@@ -44,15 +44,15 @@ RUN pytest --cov=src --cov-report=term-missing --cov-fail-under=90 && touch /ok
 FROM scratch AS test
 
 COPY --from=lint /ok /lint.ok
-COPY --from=pytest-py311 /ok /pytest-py311.ok
+COPY --from=pytest-py314 /ok /pytest-py314.ok
 COPY --from=pytest-py312 /ok /pytest-py312.ok
 
 # Imagem da Lambda (publicada no ECR pelo Terraform, fora do Jenkins).
-FROM public.ecr.aws/lambda/python:3.11 AS runtime
+FROM public.ecr.aws/lambda/python:3.14 AS runtime
 
-RUN yum update -y && \
-    yum clean all && \
-    rm -rf /var/cache/yum
+# Amazon Linux 2023: a imagem base trava o releasever na versão do build;
+# --releasever=latest pega os patches de segurança publicados depois dela.
+RUN dnf upgrade -y --releasever=latest && dnf clean all && rm -rf /var/cache/dnf
 
 RUN pip install --no-cache-dir --upgrade pip setuptools
 
