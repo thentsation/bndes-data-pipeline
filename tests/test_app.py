@@ -10,14 +10,14 @@ with patch("boto3.client") as mock_boto:
 
 
 @pytest.fixture
-def mock_env_vars(monkeypatch):
+def mock_env_vars(monkeypatch, tmp_path):
     monkeypatch.setenv("S3_BUCKET_NAME", "test-bucket")
-    monkeypatch.setenv("LOCAL_OUTPUT_DIR", "/tmp")
+    monkeypatch.setenv("LOCAL_OUTPUT_DIR", str(tmp_path))
 
 
 @patch("src.app.fetch_resources_by_year")
 @patch("src.app.process_data")
-def test_lambda_handler_success(mock_process, mock_fetch, mock_env_vars):
+def test_lambda_handler_success(mock_process, mock_fetch, mock_env_vars, tmp_path):
     """Test successful execution of lambda handler."""
 
     # Mock s3_client usage inside handler.
@@ -50,6 +50,7 @@ def test_lambda_handler_success(mock_process, mock_fetch, mock_env_vars):
     body = json.loads(response["body"])
     assert "Consolidated data for 2023 saved" in body["message"]
     assert body["records_processed"] == 2
+    assert len(list(tmp_path.rglob("*.parquet"))) == 1
 
 
 @patch("src.app.fetch_resources_by_year")
