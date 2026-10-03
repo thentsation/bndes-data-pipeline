@@ -575,7 +575,7 @@ The project implements multiple security best practices:
 ### Operational Security
 - **Audit Logging**: CloudWatch logs all Lambda executions
 - **Error Alerts**: SNS notifications for security-relevant errors
-- **Secrets Management**: Secrets stored in GitHub Secrets and AWS Secrets Manager
+- **Secrets Management**: Secrets stored in Jenkins credentials and AWS Secrets Manager
 
 ## Troubleshooting
 
@@ -677,7 +677,7 @@ aws sqs receive-message --queue-url <dlq-url>
 - [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
 - [AWS S3 Documentation](https://docs.aws.amazon.com/s3/)
 - [CloudWatch Documentation](https://docs.aws.amazon.com/cloudwatch/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/)
 - [Docker Documentation](https://docs.docker.com/)
 
 ### Internal Documentation

@@ -2,9 +2,6 @@
 
 # Balanço Patrimonial do BNDES - Arquitetura AWS de Produção
 
-[![01 - Code Quality & Lint](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/01-lint-check.yml)
-[![02 - Unit Tests](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/02-unit-tests.yml/badge.svg)](https://github.com/thentsation/bndes-data-pipeline/actions/workflows/02-unit-tests.yml)
-
 Um relato detalhado da produtização deste projeto (uma falha de busca que era engolida em silêncio e reportada como "sem dados" em vez de erro) está em [ARTIGO.md](ARTIGO.md) (pt-br) / [ARTIGO.en-us.md](ARTIGO.en-us.md) (en-us).
 
 Este projeto implementa um sistema pronto para produção que busca, processa e armazena os dados do balanço patrimonial do BNDES na AWS usando tecnologias serverless. O sistema obtém automaticamente os dados da API de Dados Abertos do BNDES, processa-os para garantir consistência e armazena o resultado no S3 como arquivos Parquet particionados por data.
@@ -12,14 +9,14 @@ Este projeto implementa um sistema pronto para produção que busca, processa e 
 ## Desenvolvimento local
 
 ```bash
-make install        # cria o .venv, instala requirements.txt + requirements-dev.txt
+make install        # cria o .venv, instala config/requirements.txt + config/requirements-dev.txt
 make test           # pytest, gate de 90% de cobertura
 make lint            # ruff check
 make typecheck        # mypy
 make docker-run        # constrói a imagem da Lambda e a executa localmente contra LOCAL_OUTPUT_DIR
 ```
 
-O CI (`01`-`04`) roda ruff + mypy + pip-audit, pytest em Python 3.11/3.12, um scan Trivy da imagem da Lambda e um smoke test real de build+run (faz POST de um payload de teste no Lambda Runtime Interface Emulator). O Dependabot cobre pip, a imagem base Docker da Lambda, providers/módulos do Terraform e GitHub Actions. `terraform plan`/`apply`/`destroy` continuam sendo ações manuais, disparadas por humanos contra a infraestrutura real da AWS - nada no CI encosta nelas.
+O CI roda no Jenkins da plataforma (veja [Pipeline de CI/CD](#pipeline-de-cicd)). `terraform plan`/`apply`/`destroy` continuam sendo ações manuais, disparadas por humanos contra a infraestrutura real da AWS - nada no CI encosta nelas.
 
 ## Visão geral
 
@@ -44,7 +41,7 @@ O sistema oferece:
 - **Monitoramento abrangente**: logs, métricas customizadas, alarmes e dashboards do CloudWatch
 - **Sistema de alertas**: notificações SNS para falhas, erros e limites de métricas
 - **Tratamento de erros**: Dead Letter Queue (SQS) para execuções da Lambda que falharam
-- **Pipeline de CI/CD**: testes, varredura de segurança, build e deploy automatizados via GitHub Actions
+- **Pipeline de CI/CD**: lint, testes, varredura de segurança e build da imagem automatizados no Jenkins da plataforma
 - **Segurança**: criptografia KMS, políticas IAM de menor privilégio, state versionado, nenhuma credencial fixa no código
 - **Infraestrutura como código**: configuração Terraform completa com arquitetura modular
 
@@ -145,8 +142,9 @@ bndes-data-pipeline/
 │   ├── app.py                  # Entrypoint da Lambda com a lógica de upload para o S3
 │   ├── fetch_data.py           # Módulo de busca de dados na API do BNDES
 │   └── process_data.py         # Módulo de processamento e transformação de dados
-├── Dockerfile                  # Imagem Docker da Lambda (Python 3.11)
-├── requirements.txt            # Dependências Python
+├── docker/Dockerfile           # Imagem da Lambda + stages de CI (target test)
+├── config/                     # requirements.txt, requirements-dev.txt, requirements.lock
+├── Jenkinsfile                 # Pipeline da plataforma (appPipeline)
 ├── data/                       # Diretório local de dados (no .gitignore)
 │   └── bndes-data/
 │       └── 2026/
@@ -189,16 +187,7 @@ bndes-data-pipeline/
 │   └── test_process_data.py
 ├── scripts/                    # Scripts utilitários
 │   └── setup-terraform-backend.sh
-├── .github/
-│   └── workflows/              # Pipelines de CI/CD do GitHub Actions
-│       ├── 01-lint-check.yml          # Verificações de qualidade de código
-│       ├── 02-unit-tests.yml          # Testes unitários com cobertura
-│       ├── 03-security-scan.yml       # Varredura de segurança
-│       ├── 04-docker-build-test.yml   # Build e teste do Docker
-│       ├── 05-terraform-plan.yml      # Terraform plan (PRs)
-│       └── 06-deploy.yml              # Deploy em produção
 ├── docker-compose.yml         # Docker Compose para desenvolvimento local
-├── Dockerfile                  # Imagem Docker da Lambda
 ├── README.md                   # README em inglês
 ├── README.pt-br.md             # Este arquivo
 └── .gitignore                  # Padrões ignorados pelo Git
@@ -260,7 +249,7 @@ cd bndes-data-pipeline
 ### 2. Instalar as dependências Python
 
 ```bash
-pip install -r requirements.txt
+pip install -r config/requirements.txt
 ```
 
 ### 3. Configurar o backend do Terraform
@@ -314,7 +303,7 @@ REGION=$(terraform output aws_region)
 aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_URI
 
 # Construir a imagem
-docker build -t bndes-data-pipeline:latest .
+docker build --target runtime -f docker/Dockerfile -t bndes-data-pipeline:latest .
 
 # Taguear a imagem
 docker tag bndes-data-pipeline:latest $ECR_URI:latest
@@ -453,62 +442,11 @@ O sistema acompanha estas métricas customizadas:
 
 ## Pipeline de CI/CD
 
-O projeto inclui um pipeline de CI/CD completo com GitHub Actions, dividido em workflows modulares:
+CI e deploy rodam no Jenkins da plataforma (`Jenkinsfile` → `appPipeline` da Shared Library `platform`, repo devops-platform), disparados por webhooks. Sem GitHub Actions.
 
-### 1. Workflow de lint (`01-lint-check.yml`)
-- **Gatilho**: push e pull requests
-- **Objetivo**: garantir qualidade e consistência do código
-- **Ferramentas**:
-  - Black (formatação de código)
-  - Flake8 (linting)
-  - MyPy (checagem de tipos)
-
-### 2. Workflow de testes unitários (`02-unit-tests.yml`)
-- **Gatilho**: push e pull requests
-- **Objetivo**: validar o funcionamento do código
-- **Ferramentas**: Pytest com relatório de cobertura
-- **Saída**: integração com o Codecov
-
-### 3. Workflow de varredura de segurança (`03-security-scan.yml`)
-- **Gatilho**: push e pull requests
-- **Objetivo**: identificar vulnerabilidades de segurança
-- **Ferramenta**: scanner de vulnerabilidades Trivy
-- **Escopo**: imagens Docker, dependências
-
-### 4. Workflow de build Docker (`04-docker-build-test.yml`)
-- **Gatilho**: push e pull requests
-- **Objetivo**: validar o build da imagem Docker
-- **Testes**: health checks do container
-
-### 5. Workflow de Terraform plan (`05-terraform-plan.yml`)
-- **Gatilho**: pull requests para main/develop
-- **Objetivo**: gerar o plano de infraestrutura para revisão
-- **Backend**: usa backend local (sem acesso ao S3)
-- **Saída**: comentário no PR com os detalhes do plano
-
-### 6. Workflow de deploy (`06-deploy.yml`)
-- **Gatilho**: push na branch main
-- **Objetivo**: fazer o deploy das mudanças de infraestrutura em produção
-- **Backend**: usa backend S3 com lock de state
-- **Processo**:
-  1. Constrói e envia a imagem Docker ao ECR
-  2. Inicializa o Terraform com o backend S3
-  3. Aplica as mudanças do Terraform
-
-### Secrets necessários no GitHub
-
-Configure estes secrets nas configurações do seu repositório no GitHub:
-
-1. **AWS_ACCESS_KEY_ID**: chave de acesso AWS com as permissões adequadas
-2. **AWS_SECRET_ACCESS_KEY**: chave secreta de acesso AWS
-3. **TF_STATE_BUCKET**: nome do bucket S3 do state do Terraform (opcional)
-
-### Permissões do GitHub Actions
-
-Os workflows precisam destas permissões no repositório GitHub:
-- `contents: read` (para o checkout)
-- `pull-requests: write` (para comentários no PR)
-- `issues: write` (para comentários no PR)
+- **PRs e branches** — validação do contrato; `docker build --target test` (`ruff check`, `ruff format --check`, `mypy`, `pytest` com cobertura ≥90%, versões das ferramentas no `config/requirements-dev.txt`); `pip-audit` no `config/requirements.lock`; Trivy (CRITICAL/HIGH) na imagem da Lambda; vulnerabilidades aceitas, se houver, ficam listadas com a justificativa no `Jenkinsfile`.
+- **main** — tudo acima e depois build e smoke test da imagem da Lambda, release com o python-semantic-release (versão, CHANGELOG, tag e release no GitHub) e rebuild do portfolio. Também é reconstruída toda segunda para pegar patches de segurança. Nada é enviado para a AWS: a imagem vai para o ECR e a infraestrutura para a AWS só pelo `terraform apply`, rodado por um humano.
+- **Dependências** — Renovate (job `platform/renovate` no Jenkins, `renovate.json` → preset do devops-platform): atualizações diárias, manutenção semanal do lockfile, issue "Dependency Dashboard" e auto-merge de patch/minor depois que o Jenkins aprova.
 
 ## Desenvolvimento local (detalhado)
 
@@ -536,7 +474,7 @@ Construa a imagem Docker localmente para testar:
 
 ```bash
 # Construir a imagem
-docker build -t bndes-data-pipeline:latest .
+docker build --target runtime -f docker/Dockerfile -t bndes-data-pipeline:latest .
 
 # Rodar o container
 docker run -p 9000:8080 \
@@ -637,7 +575,7 @@ O projeto aplica várias boas práticas de segurança:
 ### Segurança operacional
 - **Logs de auditoria**: o CloudWatch registra todas as execuções da Lambda
 - **Alertas de erro**: notificações SNS para erros relevantes de segurança
-- **Gestão de segredos**: segredos armazenados no GitHub Secrets e no AWS Secrets Manager
+- **Gestão de segredos**: segredos armazenados nas credenciais do Jenkins e no AWS Secrets Manager
 
 ## Solução de problemas
 
@@ -739,7 +677,7 @@ aws sqs receive-message --queue-url <dlq-url>
 - [Documentação do AWS Lambda](https://docs.aws.amazon.com/lambda/)
 - [Documentação do AWS S3](https://docs.aws.amazon.com/s3/)
 - [Documentação do CloudWatch](https://docs.aws.amazon.com/cloudwatch/)
-- [Documentação do GitHub Actions](https://docs.github.com/en/actions)
+- [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/)
 - [Documentação do Docker](https://docs.docker.com/)
 
 ### Documentação interna
