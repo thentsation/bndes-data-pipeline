@@ -2,6 +2,26 @@
 
 <!-- version list -->
 
+## v1.0.11 (2026-10-07)
+
+### Bug Fixes
+
+- **ci**: Scan usa docker/Dockerfile
+  ([`34bf861`](https://github.com/thentsation/bndes-data-pipeline/commit/34bf861f7d3267a70332364138b8133972a41a2c))
+
+### Chores
+
+- **deps**: Update dependency types-requests to v2.33.0.20261006
+  ([#42](https://github.com/thentsation/bndes-data-pipeline/pull/42),
+  [`beb2d9d`](https://github.com/thentsation/bndes-data-pipeline/commit/beb2d9d36e5ef580fe09b7ad944a4a3b8cae88db))
+
+### Documentation
+
+- README pt-br com a Lambda em Python 3.14
+  ([#41](https://github.com/thentsation/bndes-data-pipeline/pull/41),
+  [`cc55969`](https://github.com/thentsation/bndes-data-pipeline/commit/cc55969b31ee96eeac52f83715fb9d182e167275))
+
+
 ## v1.0.10 (2026-10-03)
 
 ### Bug Fixes
