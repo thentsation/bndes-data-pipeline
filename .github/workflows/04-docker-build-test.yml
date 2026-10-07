@@ -1,0 +1,40 @@
+name: 04 - Docker Build & Run Test
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'notebooks/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'notebooks/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build Docker Image
+        run: docker build -f docker/Dockerfile --target runtime -t bndes-lambda .
+
+      - name: Run Container
+        run: |
+          docker run -d -p 9000:8080 \
+            -e S3_BUCKET_NAME="test-bucket" \
+            -e LOCAL_OUTPUT_DIR="/tmp/local_data" \
+            --name lambda-test bndes-lambda
+          sleep 5
+
+      - name: Test Endpoint (Health Check)
+        run: |
+          # Envia um payload de teste para ver se a função não crasha na inicialização
+          curl -v -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"year": 2023}' || exit 1
+
+          # Verifica logs se houve erro
+          docker logs lambda-test

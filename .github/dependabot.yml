@@ -1,0 +1,76 @@
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /config
+    schedule:
+      interval: daily
+      time: "08:00"
+      timezone: America/Sao_Paulo
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - python
+    ignore:
+      # numpy>=2.3 has no wheels for this Lambda's actual Python 3.11
+      # runtime (confirmed by the real Docker build failing, twice, on an
+      # auto-merged bump past this ceiling) - pyarrow's own upper bound
+      # (<21.0) already caps it similarly for the same reason.
+      - dependency-name: "numpy"
+        versions: [">=2.3"]
+      # pandas 3 and pyarrow 21+ are major jumps that have to move together
+      # with the numpy ceiling above on the Lambda 3.11 runtime; that needs
+      # a deliberate, tested PR, not an auto-proposed bump.
+      - dependency-name: "pandas"
+        versions: [">=3.0"]
+      - dependency-name: "pyarrow"
+        versions: [">=21.0"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+      time: "08:00"
+      timezone: America/Sao_Paulo
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - docker
+    ignore:
+      # public.ecr.aws/lambda/python:3.11 -> :3.14 kept getting proposed and
+      # auto-merged as a routine bump (three times - an update-types filter
+      # on minor/major didn't stop it) even though the runtime jump broke
+      # the build each time (pandas/numpy/pyarrow had no wheels for 3.14).
+      # Ignoring every version blocks it outright; bumping this runtime
+      # needs a deliberate, tested PR, not Dependabot.
+      # The name must be "lambda/python": Dependabot drops the registry
+      # host for ECR Public images. No "versions" key: Docker tags have no
+      # range syntax, so versions: ["*"] matched nothing; omitting it is
+      # what ignores every version.
+      - dependency-name: "lambda/python"
+
+  - package-ecosystem: terraform
+    directory: /terraform
+    schedule:
+      interval: daily
+      time: "08:00"
+      timezone: America/Sao_Paulo
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - terraform
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+      time: "08:00"
+      timezone: America/Sao_Paulo
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - dependencies
+      - github-actions
