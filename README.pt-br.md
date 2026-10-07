@@ -16,7 +16,7 @@ make typecheck        # mypy
 make docker-run        # constrói a imagem da Lambda e a executa localmente contra LOCAL_OUTPUT_DIR
 ```
 
-O CI roda no Jenkins da plataforma (veja [Pipeline de CI/CD](#pipeline-de-cicd)). `terraform plan`/`apply`/`destroy` continuam sendo ações manuais, disparadas por humanos contra a infraestrutura real da AWS - nada no CI encosta nelas.
+O CI roda no GitHub Actions (veja [Pipeline de CI/CD](#pipeline-de-cicd)). `terraform plan`/`apply`/`destroy` continuam sendo ações manuais, disparadas por humanos contra a infraestrutura real da AWS - nada no CI encosta nelas.
 
 ## Visão geral
 
@@ -41,7 +41,7 @@ O sistema oferece:
 - **Monitoramento abrangente**: logs, métricas customizadas, alarmes e dashboards do CloudWatch
 - **Sistema de alertas**: notificações SNS para falhas, erros e limites de métricas
 - **Tratamento de erros**: Dead Letter Queue (SQS) para execuções da Lambda que falharam
-- **Pipeline de CI/CD**: lint, testes, varredura de segurança e build da imagem automatizados no Jenkins da plataforma
+- **Pipeline de CI/CD**: lint, testes, varredura de segurança e build da imagem automatizados no GitHub Actions
 - **Segurança**: criptografia KMS, políticas IAM de menor privilégio, state versionado, nenhuma credencial fixa no código
 - **Infraestrutura como código**: configuração Terraform completa com arquitetura modular
 
@@ -144,7 +144,7 @@ bndes-data-pipeline/
 │   └── process_data.py         # Módulo de processamento e transformação de dados
 ├── docker/Dockerfile           # Imagem da Lambda (Python 3.14) + stages de CI (target test)
 ├── config/                     # requirements.txt, requirements-dev.txt, requirements.lock
-├── Jenkinsfile                 # Pipeline da plataforma (appPipeline)
+├── .github/workflows/          # Pipelines de CI/CD (GitHub Actions)
 ├── data/                       # Diretório local de dados (no .gitignore)
 │   └── bndes-data/
 │       └── 2026/
@@ -442,11 +442,14 @@ O sistema acompanha estas métricas customizadas:
 
 ## Pipeline de CI/CD
 
-CI e deploy rodam no Jenkins da plataforma (`Jenkinsfile` → `appPipeline` da Shared Library `platform`, repo devops-platform), disparados por webhooks. Sem GitHub Actions.
+O projeto usa GitHub Actions, dividido em workflows modulares:
 
-- **PRs e branches** — validação do contrato; `docker build --target test` (`ruff check`, `ruff format --check`, `mypy`, `pytest` com cobertura ≥90% em Python 3.12 e 3.14, versões das ferramentas no `config/requirements-dev.txt`); `pip-audit` no `config/requirements.lock`; Trivy (CRITICAL/HIGH) na imagem da Lambda; vulnerabilidades aceitas, se houver, ficam listadas com a justificativa no `Jenkinsfile`.
-- **main** — tudo acima e depois build e smoke test da imagem da Lambda, release com o python-semantic-release (versão, CHANGELOG, tag e release no GitHub) e rebuild do portfolio. Também é reconstruída toda segunda para pegar patches de segurança. Nada é enviado para a AWS: a imagem vai para o ECR e a infraestrutura para a AWS só pelo `terraform apply`, rodado por um humano.
-- **Dependências** — Renovate (job `platform/renovate` no Jenkins, `renovate.json` → preset do devops-platform): atualizações diárias, manutenção semanal do lockfile, issue "Dependency Dashboard" e auto-merge de patch/minor depois que o Jenkins aprova.
+- **01 - Lint**: ruff, mypy e pip-audit
+- **02 - Testes unitários**: pytest com cobertura em Python 3.12 e 3.14
+- **03 - Varredura de segurança** e **04 - Build e teste da imagem Docker** (`docker/Dockerfile`)
+- **05 a 08**: auto-merge do Dependabot, Dependency Dashboard, release (semantic-release) e atualização do lockfile
+
+Nada no CI toca a AWS: o `terraform apply` continua manual.
 
 ## Desenvolvimento local (detalhado)
 
@@ -575,7 +578,7 @@ O projeto aplica várias boas práticas de segurança:
 ### Segurança operacional
 - **Logs de auditoria**: o CloudWatch registra todas as execuções da Lambda
 - **Alertas de erro**: notificações SNS para erros relevantes de segurança
-- **Gestão de segredos**: segredos armazenados nas credenciais do Jenkins e no AWS Secrets Manager
+- **Gestão de segredos**: segredos armazenados nos secrets do GitHub Actions e no AWS Secrets Manager
 
 ## Solução de problemas
 
@@ -677,7 +680,6 @@ aws sqs receive-message --queue-url <dlq-url>
 - [Documentação do AWS Lambda](https://docs.aws.amazon.com/lambda/)
 - [Documentação do AWS S3](https://docs.aws.amazon.com/s3/)
 - [Documentação do CloudWatch](https://docs.aws.amazon.com/cloudwatch/)
-- [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/)
 - [Documentação do Docker](https://docs.docker.com/)
 
 ### Documentação interna

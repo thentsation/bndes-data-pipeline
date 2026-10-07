@@ -1,6 +1,6 @@
-# CI (o Jenkins roda docker build --target test): ruff, mypy e pytest com cobertura
+# CI (docker build --target test): ruff, mypy e pytest com cobertura
 # mínima de 90% em Python 3.12 e 3.14 (a Lambda roda em 3.14), nas versões fixadas em config/requirements-dev.txt
-# (atualizadas pelo Renovate). pip-audit e Trivy rodam no pipeline da plataforma, fora do
+# (atualizadas pelo Dependabot). pip-audit e Trivy rodam no GitHub Actions, fora do
 # cache de build, porque o resultado muda com as bases de vulnerabilidades.
 FROM python:3.12-slim AS lint
 
@@ -47,7 +47,7 @@ COPY --from=lint /ok /lint.ok
 COPY --from=pytest-py314 /ok /pytest-py314.ok
 COPY --from=pytest-py312 /ok /pytest-py312.ok
 
-# Imagem da Lambda (publicada no ECR pelo Terraform, fora do Jenkins).
+# Imagem da Lambda (publicada no ECR pelo Terraform, fora do CI).
 FROM public.ecr.aws/lambda/python:3.14 AS runtime
 
 # Amazon Linux 2023: a imagem base trava o releasever na versão do build;

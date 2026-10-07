@@ -1,0 +1,11 @@
+# CVE-2026-25087: use-after-free in Arrow C++'s IPC reader with pre-buffering
+# enabled - not reachable from Python bindings per the advisory itself. Fix
+# (pyarrow 23.0.1) has no wheels for this Lambda's Python 3.11 runtime.
+CVE-2026-25087
+
+# CVE-2026-23949 (jaraco.context) and CVE-2026-24049 (wheel): both are build
+# tooling bundled inside the public.ecr.aws/lambda/python base image's own
+# pip/setuptools installation, not runtime dependencies this project
+# declares or can bump directly.
+CVE-2026-23949
+CVE-2026-24049
