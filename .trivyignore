@@ -9,3 +9,11 @@ CVE-2026-25087
 # declares or can bump directly.
 CVE-2026-23949
 CVE-2026-24049
+
+# CVE-2026-78667, CVE-2026-78669, CVE-2026-97031: Go stdlib (net/http) dentro do
+# /usr/local/bin/aws-lambda-rie, o Runtime Interface Emulator que vem na imagem base
+# public.ecr.aws/lambda/python. Só é usado fora da AWS (healthcheck/docker-compose
+# local); na Lambda real o binário não roda. O fix depende de a AWS republicar a base.
+CVE-2026-78667
+CVE-2026-78669
+CVE-2026-97031
