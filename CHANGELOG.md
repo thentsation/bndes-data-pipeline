@@ -2,6 +2,21 @@
 
 <!-- version list -->
 
+## v1.0.12 (2026-10-10)
+
+### Bug Fixes
+
+- **security**: Ignora CVEs do Go stdlib no aws-lambda-rie da imagem base
+  ([#45](https://github.com/thentsation/bndes-data-pipeline/pull/45),
+  [`2e8bee8`](https://github.com/thentsation/bndes-data-pipeline/commit/2e8bee83d4a167145db2860930bcf8c9dcc18599))
+
+### Chores
+
+- **deps**: Update boto3 requirement in /config
+  ([#44](https://github.com/thentsation/bndes-data-pipeline/pull/44),
+  [`d3537fd`](https://github.com/thentsation/bndes-data-pipeline/commit/d3537fda106e5929d2fd61055ce4e0f075c9e471))
+
+
 ## v1.0.11 (2026-10-07)
 
 ### Bug Fixes
