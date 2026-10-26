@@ -25,7 +25,7 @@ jobs:
         # (public.ecr.aws/lambda/python:3.11) - without it, uv resolves
         # against whatever Python the runner defaults to and can pick
         # versions (numpy, pyarrow) with no 3.11 wheels at all.
-        run: uv pip compile config/requirements.txt -o config/requirements.lock --universal --python-version 3.12
+        run: uv pip compile --upgrade config/requirements.txt -o config/requirements.lock --universal --python-version 3.12
 
       - name: Audit updated lockfile
         id: audit
