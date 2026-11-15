@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.0.14 (2026-11-15)
+
+### Bug Fixes
+
+- **security**: Ignore the Go stdlib CVE in the base image's aws-lambda-rie
+  ([#84](https://github.com/thentsation/bndes-data-pipeline/pull/84),
+  [`73f79f3`](https://github.com/thentsation/bndes-data-pipeline/commit/73f79f3a1cdb0c534649db6e5f169b0453cb54bf))
+
+
 ## v1.0.13 (2026-11-15)
 
 ### Bug Fixes
