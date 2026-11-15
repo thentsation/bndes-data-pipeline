@@ -17,3 +17,8 @@ CVE-2026-24049
 CVE-2026-78667
 CVE-2026-78669
 CVE-2026-97031
+
+# CVE-2026-111943: crypto/x509 do Go stdlib (v1.26.9) dentro do mesmo
+# /usr/local/bin/aws-lambda-rie. Mesma situação: só roda fora da AWS e o fix depende de a
+# AWS republicar a imagem base.
+CVE-2026-111943
