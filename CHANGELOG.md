@@ -2,6 +2,122 @@
 
 <!-- version list -->
 
+## v1.0.13 (2026-11-15)
+
+### Bug Fixes
+
+- **deps**: Upgrade lockfile and use --upgrade in lockfile workflow
+  ([#63](https://github.com/thentsation/bndes-data-pipeline/pull/63),
+  [`5043dbb`](https://github.com/thentsation/bndes-data-pipeline/commit/5043dbb3d0d790669747d51a7fbbe55a8814e29c))
+
+### Chores
+
+- **ci**: Bump astral-sh/setup-uv from 10.2.0 to 10.3.0
+  ([#48](https://github.com/thentsation/bndes-data-pipeline/pull/48),
+  [`e5d0c62`](https://github.com/thentsation/bndes-data-pipeline/commit/e5d0c62c50dfbf16cba8624c0ea482251777ca1d))
+
+- **ci**: Bump astral-sh/setup-uv from 10.3.0 to 10.3.2
+  ([#59](https://github.com/thentsation/bndes-data-pipeline/pull/59),
+  [`ffcd402`](https://github.com/thentsation/bndes-data-pipeline/commit/ffcd4023b70cb00afc7f773e605b8d7cc4af54be))
+
+- **ci**: Bump astral-sh/setup-uv from 10.3.2 to 10.3.3
+  ([#67](https://github.com/thentsation/bndes-data-pipeline/pull/67),
+  [`1ad9a45`](https://github.com/thentsation/bndes-data-pipeline/commit/1ad9a453967a0b5c9456e821f1f7452b5ee32926))
+
+- **ci**: Bump peter-evans/create-pull-request from 8.1.1 to 8.1.2
+  ([#75](https://github.com/thentsation/bndes-data-pipeline/pull/75),
+  [`b285040`](https://github.com/thentsation/bndes-data-pipeline/commit/b285040f05e12cf300ea36a113402498f510dcf7))
+
+- **ci**: Bump peter-evans/create-pull-request from 8.1.2 to 8.1.3
+  ([#81](https://github.com/thentsation/bndes-data-pipeline/pull/81),
+  [`4a9480b`](https://github.com/thentsation/bndes-data-pipeline/commit/4a9480b2d94a5eb7e4ae9bb4c81b631f33537c8b))
+
+- **deps**: Bump boto3-stubs from 1.43.108 to 1.43.112 in /config
+  ([#53](https://github.com/thentsation/bndes-data-pipeline/pull/53),
+  [`276c8bc`](https://github.com/thentsation/bndes-data-pipeline/commit/276c8bc935b8f598f20b550d84168ea6b435b7db))
+
+- **deps**: Bump boto3-stubs from 1.43.112 to 1.43.114 in /config
+  ([#56](https://github.com/thentsation/bndes-data-pipeline/pull/56),
+  [`e99f7f5`](https://github.com/thentsation/bndes-data-pipeline/commit/e99f7f5437792f3f0e8f42328a4232d611bd81bc))
+
+- **deps**: Bump boto3-stubs from 1.43.114 to 1.43.115 in /config
+  ([#58](https://github.com/thentsation/bndes-data-pipeline/pull/58),
+  [`7ba9420`](https://github.com/thentsation/bndes-data-pipeline/commit/7ba94202b261dbbea31b4bcd4aaca3f5a9e7d99a))
+
+- **deps**: Bump boto3-stubs from 1.43.115 to 1.43.118 in /config
+  ([#61](https://github.com/thentsation/bndes-data-pipeline/pull/61),
+  [`7e7b4be`](https://github.com/thentsation/bndes-data-pipeline/commit/7e7b4be4ecea67faf5b3e105d9e6788cd9774ff2))
+
+- **deps**: Bump boto3-stubs from 1.43.118 to 1.43.119 in /config
+  ([#64](https://github.com/thentsation/bndes-data-pipeline/pull/64),
+  [`791e2b3`](https://github.com/thentsation/bndes-data-pipeline/commit/791e2b37952fa051cb439a39ba80fa16e62a5d68))
+
+- **deps**: Bump boto3-stubs from 1.43.119 to 1.43.122 in /config
+  ([#68](https://github.com/thentsation/bndes-data-pipeline/pull/68),
+  [`f4d2844`](https://github.com/thentsation/bndes-data-pipeline/commit/f4d28447b0ae16585199b8d73dd63e9344649edf))
+
+- **deps**: Bump boto3-stubs from 1.43.122 to 1.43.123 in /config
+  ([#74](https://github.com/thentsation/bndes-data-pipeline/pull/74),
+  [`5e043a6`](https://github.com/thentsation/bndes-data-pipeline/commit/5e043a688ad58ca732dd2849339206ea3b565cad))
+
+- **deps**: Bump boto3-stubs from 1.43.123 to 1.43.125 in /config
+  ([#78](https://github.com/thentsation/bndes-data-pipeline/pull/78),
+  [`3fdb461`](https://github.com/thentsation/bndes-data-pipeline/commit/3fdb46146f1be5b04ecb9bb13c016a2c8a7793a8))
+
+- **deps**: Bump boto3-stubs from 1.43.125 to 1.43.126 in /config
+  ([#79](https://github.com/thentsation/bndes-data-pipeline/pull/79),
+  [`cee2896`](https://github.com/thentsation/bndes-data-pipeline/commit/cee28969a353cfd6072b0f144b7d78a25e1bccaa))
+
+- **deps**: Bump boto3-stubs from 1.43.126 to 1.43.127 in /config
+  ([#83](https://github.com/thentsation/bndes-data-pipeline/pull/83),
+  [`6827651`](https://github.com/thentsation/bndes-data-pipeline/commit/68276511ecc5b07bb3af5abb1eec5749f0380ff4))
+
+- **deps**: Bump mypy from 2.4.0 to 2.4.1 in /config
+  ([#71](https://github.com/thentsation/bndes-data-pipeline/pull/71),
+  [`e5d02d5`](https://github.com/thentsation/bndes-data-pipeline/commit/e5d02d5d58a58e0474ffece6295286a2044f6fdb))
+
+- **deps**: Bump pytest from 9.1.1 to 9.2.0 in /config
+  ([#70](https://github.com/thentsation/bndes-data-pipeline/pull/70),
+  [`34cfaae`](https://github.com/thentsation/bndes-data-pipeline/commit/34cfaae6f107f8c9bcccf4f5735f22b751e17b59))
+
+- **deps**: Bump ruff from 0.16.10 to 0.17.0 in /config
+  ([#49](https://github.com/thentsation/bndes-data-pipeline/pull/49),
+  [`d6e54b5`](https://github.com/thentsation/bndes-data-pipeline/commit/d6e54b580c2cbb307a8bad0494386f0ff9871105))
+
+- **deps**: Bump ruff from 0.17.0 to 0.17.1 in /config
+  ([#54](https://github.com/thentsation/bndes-data-pipeline/pull/54),
+  [`054ce13`](https://github.com/thentsation/bndes-data-pipeline/commit/054ce13864b85cec85383a900617c041cb72893c))
+
+- **deps**: Bump ruff from 0.17.1 to 0.17.2 in /config
+  ([#60](https://github.com/thentsation/bndes-data-pipeline/pull/60),
+  [`4fd32f2`](https://github.com/thentsation/bndes-data-pipeline/commit/4fd32f2e3057b057d792caf306f8a6ee58d748f3))
+
+- **deps**: Bump ruff from 0.17.2 to 0.17.3 in /config
+  ([#66](https://github.com/thentsation/bndes-data-pipeline/pull/66),
+  [`630f081`](https://github.com/thentsation/bndes-data-pipeline/commit/630f081a5f7d746fadd090f8b9afd320b70693d7))
+
+- **deps**: Bump ruff from 0.17.3 to 0.17.4 in /config
+  ([#77](https://github.com/thentsation/bndes-data-pipeline/pull/77),
+  [`0cdc70c`](https://github.com/thentsation/bndes-data-pipeline/commit/0cdc70c8c224af5a4a0723744d57526fa7c92e58))
+
+- **deps**: Bump types-requests in /config
+  ([#72](https://github.com/thentsation/bndes-data-pipeline/pull/72),
+  [`643928b`](https://github.com/thentsation/bndes-data-pipeline/commit/643928b24cb55dcbe9e1c1da6b0d25698b63ada6))
+
+- **deps**: Update boto3 requirement in /config
+  ([#82](https://github.com/thentsation/bndes-data-pipeline/pull/82),
+  [`067b938`](https://github.com/thentsation/bndes-data-pipeline/commit/067b938a500f44b83d9011349be8dc3038e49a19))
+
+- **deps**: Update lockfile ([#47](https://github.com/thentsation/bndes-data-pipeline/pull/47),
+  [`46d6067`](https://github.com/thentsation/bndes-data-pipeline/commit/46d6067c66b58b8aa576736901fe736df518018e))
+
+### Continuous Integration
+
+- Remove workflow notify-portfolio (token sem acesso; o portfolio atualiza pelo cron diário)
+  ([#46](https://github.com/thentsation/bndes-data-pipeline/pull/46),
+  [`f15f30f`](https://github.com/thentsation/bndes-data-pipeline/commit/f15f30fefb2e4ed38bab5a8847352cdf41e88c75))
+
+
 ## v1.0.12 (2026-10-10)
 
 ### Bug Fixes
