@@ -1,0 +1,82 @@
+# pd.concat of the resources: one row per record, the columns of every resource in the order they first appear (the
+# columns of the first resource, `source_resource_name` and `source_resource_id`, then the new ones of each next
+# resource), a column missing in a resource left empty. A column stays whole numbers (int64) when it is in every
+# resource with whole numbers only; the others are floats, as pandas makes them.
+#
+# The columns are only known when the job runs, and a Telvax table has a type fixed when the program is checked. So the
+# values go into a long table of one cell per row and column, and a query built at run time turns it into the wide table
+# and writes it to Parquet (`COPY ... TO`), compressed with snappy as pandas does.
+from fetch import Fetched
+
+type Cell:
+    row: Int
+    _id: Int
+    descricao: Text
+    source_resource_name: Text
+    source_resource_id: Text
+    column: Text
+    value: Float?
+
+type Copied:
+    count: u64
+
+# The numeric columns, in the order of the consolidated table, and whether each stays whole numbers.
+fn column_order(resources: List[Fetched]) -> List[(Text, Bool)]:
+    let seen: Map[Text, Int] = std.map.new()
+    let integers: Map[Text, Bool] = std.map.new()
+    var order: List[Text] = []
+    for r in resources:
+        for c in r.columns:
+            if not seen.contains_key(c.name):
+                seen.insert(c.name, 0)
+                integers.insert(c.name, True)
+                order.push(c.name)
+            seen.insert(c.name, seen.get(c.name).unwrap() + 1)
+            integers.insert(c.name, integers.get(c.name).unwrap() and c.integers)
+        if order.len() > 0 and not seen.contains_key("source_resource_name"):
+            seen.insert("source_resource_name", 0)
+            order.push("source_resource_name")
+            order.push("source_resource_id")
+    let n = std.math.to_int(resources.len())
+    order |> std.iter.map(c => (c, c.starts_with("source_") or (seen.get(c).unwrap() == n and integers.get(c).unwrap())))
+
+fn cells(resources: List[Fetched]) -> Table[Cell]:
+    var out: List[Cell] = []
+    var row = 0
+    for r in resources:
+        var i = 0
+        for b in r.rows:
+            let descricao = b.descricao.unwrap_or("None")
+            # One cell with no column keeps a row that has no value at all.
+            out.push(Cell(row: row, _id: b._id, descricao: descricao, source_resource_name: r.name, source_resource_id: r.id, column: "", value: None))
+            for c in r.columns:
+                out.push(Cell(row: row, _id: b._id, descricao: descricao, source_resource_name: r.name, source_resource_id: r.id, column: c.name, value: c.values.get(i).unwrap_or(None)))
+            row = row + 1
+            i = i + 1
+    std.table.from_rows(out)
+
+fn quoted(name: Text) -> Text:
+    "\"" + name.replace("\"", "\"\"") + "\""
+
+fn text(value: Text) -> Text:
+    "'" + value.replace("'", "''") + "'"
+
+# The query that makes the wide table, in the order of pandas.
+fn wide_query(resources: List[Fetched]) -> Text:
+    var select: List[Text] = ["_id", "descricao"]
+    for col in column_order(resources):
+        let name = col.0
+        let whole = col.1
+        if name.starts_with("source_"):
+            select.push(quoted(name))
+        else:
+            let kind = "BIGINT" if whole else "DOUBLE"
+            select.push(f"CAST(MAX(CASE WHEN \"column\" = {text(name)} THEN value END) AS {kind}) AS {quoted(name)}")
+    "SELECT " + std.text.join(select, ", ") + " FROM t GROUP BY row, _id, descricao, source_resource_name, source_resource_id ORDER BY row"
+
+# Writes the consolidated table to `path` as Parquet, and gives its number of rows.
+fn write_parquet(resources: List[Fetched], path: Text) -> Result[Int, Text]:
+    let t = cells(resources)
+    let query = wide_query(resources)
+    let copied: Table[Copied] = t.sql(f"COPY ({query}) TO {text(path)} STORED AS PARQUET OPTIONS (compression 'snappy')")
+    Ok(std.math.to_int(copied.to_rows().get(0).unwrap().count))

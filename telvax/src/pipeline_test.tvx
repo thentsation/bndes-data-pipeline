@@ -1,0 +1,73 @@
+# The steps of the pipeline on answers of the API written here (std.test.mock), as tests/ of the Python version.
+from fetch import Base, Column, Fetched, get_json, fetch_resources_by_year
+from process import process_data
+from consolidate import column_order, write_parquet
+from app import Event, year_of, lambda_handler
+from storage import env, key_of
+
+let PACKAGE = "{\"result\": {\"resources\": [{\"name\": \"Balanço 03/2023\", \"id\": \"r1\", \"datastore_active\": true}, {\"name\": \"Balanço 12/2022\", \"id\": \"r0\", \"datastore_active\": true}, {\"name\": \"IFRS 03/2023\", \"id\": \"r2\", \"datastore_active\": false}]}}"
+let RECORDS = "{\"result\": {\"fields\": [{\"id\": \"_id\", \"type\": \"int\"}, {\"id\": \"descricao\", \"type\": \"text\"}, {\"id\": \"a\", \"type\": \"numeric\"}, {\"id\": \"b\", \"type\": \"numeric\"}], \"records\": [{\"_id\": 1, \"descricao\": \" ATIVO \", \"a\": 10, \"b\": 1.5}, {\"_id\": 2, \"descricao\": null, \"a\": 20, \"b\": null}]}}"
+let COLUMN_A = "{\"result\": {\"records\": [{\"_id\": 1, \"a\": 10}, {\"_id\": 2, \"a\": 20}]}}"
+let COLUMN_B = "{\"result\": {\"records\": [{\"_id\": 1, \"b\": 1.5}, {\"_id\": 2, \"b\": null}]}}"
+
+fn fake_api(url: Text) -> Result[Text, Text]:
+    if url.contains("package_show"):
+        return Ok(PACKAGE)
+    if url.contains("fields=_id,a"):
+        return Ok(COLUMN_A)
+    if url.contains("fields=_id,b"):
+        return Ok(COLUMN_B)
+    Ok(RECORDS)
+
+fn no_env(name: Text) -> Text:
+    ""
+
+fn test_only_the_active_resources_of_the_year_are_fetched():
+    std.test.mock(get_json, fake_api)
+    let found = fetch_resources_by_year(2023, "balanco-patrimonial").unwrap()
+    assert_eq(found |> std.iter.map(r => r.name), ["Balanço 03/2023"])
+    let r = found.get(0).unwrap()
+    assert_eq(r.rows.len(), 2)
+    # `a` is whole numbers with none missing; `b` has a fraction and a null.
+    assert_eq(r.columns |> std.iter.map(c => (c.name, c.integers)), [("a", True), ("b", False)])
+    assert_eq(r.columns.get(1).unwrap().values, [Some(1.5), None])
+
+fn test_descriptions_are_stripped_and_a_missing_one_is_none():
+    let rows = process_data([Base(_id: 1, descricao: Some("  ATIVO ")), Base(_id: 2, descricao: None)])
+    assert_eq(rows |> std.iter.map(r => r.descricao), [Some("ATIVO"), Some("None")])
+
+fn test_the_columns_follow_pandas_concat():
+    let first = Fetched(name: "x", id: "r1", rows: [], columns: [Column(name: "a", values: [], integers: True), Column(name: "b", values: [], integers: True)])
+    let second = Fetched(name: "y", id: "r2", rows: [], columns: [Column(name: "a", values: [], integers: True), Column(name: "c", values: [], integers: True)])
+    # `a` is in both with whole numbers: int64. `b` and `c` are missing from one: floats.
+    assert_eq(column_order([first, second]), [("a", True), ("b", False), ("source_resource_name", True), ("source_resource_id", True), ("c", False)])
+
+type Written:
+    _id: Int
+    descricao: Text
+    a: Int
+    b: Float?
+    source_resource_name: Text
+    source_resource_id: Text
+
+fn test_the_consolidated_table_is_written_as_parquet():
+    let r = Fetched(name: "x", id: "r1", rows: [Base(_id: 1, descricao: Some("A")), Base(_id: 2, descricao: Some("B"))], columns: [Column(name: "a", values: [Some(10.0), Some(20.0)], integers: True), Column(name: "b", values: [Some(1.5), None], integers: False)])
+    std.fs.create_dir("test-output").unwrap()
+    assert_eq(write_parquet([r], "test-output/t.parquet").unwrap(), 2)
+    let back: Table[Written] = std.table.read_parquet("test-output/t.parquet")
+    assert_eq(back.to_rows(), [Written(_id: 1, descricao: "A", a: 10, b: Some(1.5), source_resource_name: "x", source_resource_id: "r1"), Written(_id: 2, descricao: "B", a: 20, b: None, source_resource_name: "x", source_resource_id: "r1")])
+
+fn test_the_year_comes_from_the_event_or_its_body():
+    assert_eq(year_of(Event(year: Some(2023), body: None)), Some(2023))
+    assert_eq(year_of(Event(year: None, body: Some("{\"year\": 2021}"))), Some(2021))
+    assert_eq(year_of(Event(year: None, body: Some("not json"))), None)
+    assert_eq(year_of(Event(year: Some(0), body: None)), None)
+    assert_eq(year_of(Event(year: None, body: None)), None)
+
+fn test_the_answers_of_the_handler():
+    std.test.mock(env, no_env)
+    let a = lambda_handler(Event(year: Some(2023), body: None))
+    assert_eq((a.statusCode, a.body), (500, "{\"message\":\"Neither S3_BUCKET_NAME nor LOCAL_OUTPUT_DIR environment variables are set\"}"))
+
+fn test_the_key_has_the_date():
+    assert_eq(key_of(2023, "bndes-data", 1764115200.0), "bndes-data/2025/11/26/balanco_patrimonial_2023_consolidado.parquet")

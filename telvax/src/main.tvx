@@ -1,0 +1,19 @@
+# The BNDES pipeline as a service and as a job.
+#
+# * On AWS Lambda, behind the AWS Lambda Web Adapter (docker/Dockerfile.telvax): the schedule's event `{"year": 2023}`
+#   arrives as `POST /events`, and an HTTP request with the year in its body too.
+# * As a job: `telvax build --bundle src/main.tvx -o bndes` and `./bndes --year 2023`, or `tvpm run main --year 2023`.
+from std.http import Response
+from app import Event, Answer, lambda_handler
+
+@endpoint(POST, "/events")
+fn events(event: Event) -> Result[Response, Text]:
+    let a = lambda_handler(event)
+    Ok(Response.text(a.body).status(a.statusCode).header("content-type", "application/json"))
+
+# Consolidates the balance sheets of `year` and saves them; prints the answer, and fails unless it is a 200.
+fn main(year: Int = 2023) -> Result[Text, Text]:
+    let a = lambda_handler(Event(year: Some(year), body: None))
+    if a.statusCode != 200:
+        return Err(f"{a.statusCode} {a.body}")
+    Ok(a.body)

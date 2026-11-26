@@ -1,0 +1,37 @@
+# save_data of src/app.py: the consolidated table as Parquet under `bndes-data/YYYY/MM/DD/`, in LOCAL_OUTPUT_DIR when it
+# is set, otherwise in the S3 bucket (with the S3 client of the `aws` package and the credentials of the environment,
+# as boto3 has them on Lambda).
+from aws.s3 import client, put_object
+from fetch import Fetched
+from consolidate import write_parquet
+
+fn env(name: Text) -> Text:
+    std.env.get(name).unwrap_or("")
+
+fn key_of(year: Int, prefix: Text, now: Float) -> Text:
+    let date = std.time.format(now, "%Y/%m/%d")
+    f"{prefix}/{date}/balanco_patrimonial_{year}_consolidado.parquet"
+
+# Where the file went: its path, or its key in the bucket.
+fn save_data(resources: List[Fetched], bucket: Text, year: Int, prefix: Text) -> Result[Text, Text]:
+    let key = key_of(year, prefix, std.time.now())
+    let local = env("LOCAL_OUTPUT_DIR")
+    if not local.is_empty():
+        let path = std.path.join(local, key)
+        std.fs.create_dir(std.path.parent(path).unwrap_or(local))?
+        write_parquet(resources, path)?
+        print(f"Saved: {path}")
+        return Ok(path)
+    if bucket.is_empty():
+        return Err("bucket_name is required when LOCAL_OUTPUT_DIR is not set")
+    let tmp = std.path.join(std.env.get("TMPDIR").unwrap_or("/tmp"), f"bndes_{year}.parquet")
+    write_parquet(resources, tmp)?
+    let body = std.fs.read_bytes(tmp)?
+    std.fs.remove(tmp)?
+    match put_object(client()?, bucket, key, body, "application/octet-stream"):
+        case Ok(_):
+            print(f"Saved to S3: s3://{bucket}/{key}")
+            Ok(key)
+        case Err(e):
+            print(f"Error saving to S3: {e}")
+            Err(e)

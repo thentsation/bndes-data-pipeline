@@ -1,0 +1,110 @@
+# src/fetch_data.py: the resources of the dataset whose name has the year and whose datastore is active, and the records
+# of each, from the CKAN API of BNDES.
+
+let BASE_URL = "https://dadosabertos.bndes.gov.br/api/3/action"
+
+type Resource:
+    name: Text?
+    id: Text?
+    datastore_active: Bool?
+
+type PackageResult:
+    resources: List[Resource]
+
+type PackageShow:
+    result: PackageResult?
+
+type Field:
+    id: Text
+    type: Text
+
+# The columns every record has: the row id and the description.
+type Base:
+    _id: Int
+    descricao: Text?
+
+type SearchResult:
+    fields: List[Field]
+    records: List[Base]
+
+type Search:
+    result: SearchResult?
+
+type IntResult:
+    records: List[Map[Text, Int?]]
+
+type IntSearch:
+    result: IntResult?
+
+type FloatResult:
+    records: List[Map[Text, Float?]]
+
+type FloatSearch:
+    result: FloatResult?
+
+# One numeric column of a resource: its values, and whether they are all whole numbers with none missing (pandas keeps
+# such a column as int64).
+type Column:
+    name: Text
+    values: List[Float?]
+    integers: Bool
+
+# A resource and its records, column by column in the order of the API (the order of pandas' DataFrame).
+type Fetched:
+    name: Text
+    id: Text
+    rows: List[Base]
+    columns: List[Column]
+
+# The body of a GET that answered 2xx (`raise_for_status`). Tests replace it with `std.test.mock`.
+fn get_json(url: Text) -> Result[Text, Text]:
+    let resp = std.http.client.get(url)?
+    if not resp.ok():
+        return Err(f"{resp.status()} error for url: {url}")
+    resp.text()
+
+fn search_url(rid: Text, fields: Text) -> Text:
+    let base = f"{BASE_URL}/datastore_search?resource_id={rid}&limit=50000"
+    base if fields.is_empty() else base + "&fields=" + fields
+
+# The values of one numeric column. JSON numbers are read as whole numbers first: when they all are, and none is
+# missing, the column is a whole-number one, as pandas makes it.
+fn column(rid: Text, name: Text) -> Result[Column, Text]:
+    let body = get_json(search_url(rid, "_id," + name))?
+    let ints: Result[IntSearch, Text] = std.json.parse(body)
+    match ints:
+        case Ok(s):
+            let records = s.result.map(r => r.records).unwrap_or([])
+            let values = records |> std.iter.map(r => r.get(name).unwrap_or(None))
+            if values.all(v => v.is_some()):
+                return Ok(Column(name: name, values: values |> std.iter.map(v => Some(std.math.to_float(v.unwrap()))), integers: True))
+        case Err(_):
+            pass
+    let floats: FloatSearch = std.json.parse(body)?
+    let records = floats.result.map(r => r.records).unwrap_or([])
+    Ok(Column(name: name, values: records |> std.iter.map(r => r.get(name).unwrap_or(None)), integers: False))
+
+fn fetch_resources_by_year(year: Int, dataset_id: Text) -> Result[List[Fetched], Text]:
+    let str_year = f"{year}"
+    print(f"Fetching metadata for dataset: {dataset_id}")
+    let pkg: PackageShow = std.json.parse(get_json(f"{BASE_URL}/package_show?id={dataset_id}")?)?
+    let resources = pkg.result.map(r => r.resources).unwrap_or([])
+    var out: List[Fetched] = []
+    for resource in resources:
+        let name = resource.name.unwrap_or("")
+        let rid = resource.id.unwrap_or("")
+        if name.contains(str_year) and resource.datastore_active.unwrap_or(False):
+            print(f"Fetching records for: {name} (ID: {rid})")
+            let search: Search = std.json.parse(get_json(search_url(rid, ""))?)?
+            let result = search.result.unwrap()
+            if result.records.is_empty():
+                print(f"No records found in datastore for {name}")
+            else:
+                var columns: List[Column] = []
+                for f in result.fields:
+                    if f.id != "_id" and f.id != "descricao":
+                        columns.push(column(rid, f.id)?)
+                out.push(Fetched(name: name, id: rid, rows: result.records, columns: columns))
+    if out.is_empty():
+        print(f"No matching resources with active datastore found for year {str_year}")
+    Ok(out)

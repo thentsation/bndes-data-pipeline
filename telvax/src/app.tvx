@@ -1,0 +1,86 @@
+# lambda_handler of src/app.py: the year from the event (or from a JSON body), every resource of that year processed and
+# consolidated into one Parquet file, and an answer with a status and a JSON body.
+from fetch import Fetched, fetch_resources_by_year
+from process import process_data
+from storage import save_data, env
+
+# The event: `{"year": 2023}`, or an HTTP request with the year in `body`.
+type Event:
+    year: Int?
+    body: Text?
+
+type YearOnly:
+    year: Int?
+
+type Message:
+    message: Text
+
+type Done:
+    message: Text
+    records_processed: Int
+    location: Text
+    source_files_count: Int
+
+# The status and the JSON body of the answer, as the Python handler gives them.
+type Answer:
+    statusCode: Int
+    body: Text
+
+fn message(status: Int, text: Text) -> Answer:
+    Answer(statusCode: status, body: std.json.stringify(Message(message: text)))
+
+# The year of the event, or None: a missing year, 0, or a body that is not JSON with a year.
+fn year_of(event: Event) -> Int?:
+    match event.year:
+        case Some(y):
+            if y != 0:
+                return Some(y)
+        case None:
+            pass
+    match event.body:
+        case Some(b):
+            let parsed: Result[YearOnly, Text] = std.json.parse(b)
+            match parsed:
+                case Ok(v):
+                    match v.year:
+                        case Some(y):
+                            return None if y == 0 else Some(y)
+                        case None:
+                            return None
+                case Err(_):
+                    return None
+        case None:
+            None
+
+fn run(year: Int, bucket: Text) -> Result[Answer, Text]:
+    print(f"Starting processing for year: {year}")
+    var all: List[Fetched] = []
+    for r in fetch_resources_by_year(year, "balanco-patrimonial")?:
+        if not r.rows.is_empty():
+            print("Data processed successfully!")
+            all.push(Fetched(name: r.name, id: r.id, rows: process_data(r.rows), columns: r.columns))
+    if all.is_empty():
+        return Ok(message(404, f"No data found for year {year}"))
+    print(f"Consolidating {all.len()} files...")
+    let location = save_data(all, bucket, year, "bndes-data")?
+    let storage = "Local Filesystem" if not env("LOCAL_OUTPUT_DIR").is_empty() else "S3"
+    var records = 0
+    for r in all:
+        records = records + std.math.to_int(r.rows.len())
+    let done = Done(message: f"Consolidated data for {year} saved to {storage}", records_processed: records, location: location, source_files_count: std.math.to_int(all.len()))
+    Ok(Answer(statusCode: 200, body: std.json.stringify(done)))
+
+fn lambda_handler(event: Event) -> Answer:
+    let bucket = env("S3_BUCKET_NAME")
+    if bucket.is_empty() and env("LOCAL_OUTPUT_DIR").is_empty():
+        return message(500, "Neither S3_BUCKET_NAME nor LOCAL_OUTPUT_DIR environment variables are set")
+    match year_of(event):
+        case None:
+            message(400, "Missing required parameter: 'year'")
+        case Some(year):
+            match run(year, bucket):
+                case Ok(a):
+                    a
+                case Err(e):
+                    print(f"Critical error in lambda_handler: {e}")
+                    message(500, f"Critical error: {e}")

@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1
+# The Lambda image of the Telvax version (telvax/). The AWS Lambda Web Adapter turns the invocations into HTTP: the
+# schedule's event `{"year": 2023}` arrives as `POST /events` (the default pass-through path of the adapter), and the
+# readiness check is `/healthz`. Terraform deploys it as it deploys the Python image: push it to the same ECR repository.
+# Build with: docker build -f docker/Dockerfile.telvax -t bndes-telvax .
+
+ARG TELVAX_IMAGE=ghcr.io/telvax/telvax:latest
+FROM ${TELVAX_IMAGE} AS builder
+WORKDIR /app
+COPY telvax/ .
+RUN tvpm install && mkdir -p /out && telvax build --serve src/main.tvx -o /out/service
+
+FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+COPY --from=builder /out/service /service
+ENV PORT=8080 AWS_LWA_PORT=8080 AWS_LWA_READINESS_CHECK_PATH=/healthz
+EXPOSE 8080
+USER 65532:65532
+ENTRYPOINT ["/service"]

@@ -1,0 +1,57 @@
+name: Telvax
+
+# The Telvax version of the job (telvax/): check, format, tests, a run against the BNDES API compared with the Python
+# job, and the S3 upload against MinIO.
+on:
+  pull_request:
+    paths: ["telvax/**", "docker/Dockerfile.telvax", ".github/workflows/telvax.yml"]
+  push:
+    branches: [main, feat/telvax]
+    paths: ["telvax/**", "docker/Dockerfile.telvax", ".github/workflows/telvax.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: telvax
+    steps:
+      - uses: actions/checkout@v7
+      # std.http.client, std.table SQL and the aws package need a Telvax newer than 0.48.2, which is in its `develop`
+      # branch. Once a release has them, this becomes the install script of Telvax.
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Telvax from develop
+        run: cargo install --locked --git https://github.com/telvax/telvax --branch develop telvax_cli telvax_pkg
+      - name: Check, format and tests
+        run: |
+          tvpm install
+          for f in src/*.tvx; do telvax check "$f"; telvax fmt --check "$f"; done
+          telvax test src/pipeline_test.tvx
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r ../config/requirements.txt
+      - name: The same Parquet as the Python job, for 2023
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          LOCAL_OUTPUT_DIR=$RUNNER_TEMP/py python -c "import sys; sys.path.insert(0, '..'); from src.app import lambda_handler; assert lambda_handler({'year': 2023}, None)['statusCode'] == 200"
+          LOCAL_OUTPUT_DIR=$RUNNER_TEMP/tv tvpm run main --year 2023
+          python compare_parquet.py $(find $RUNNER_TEMP/py -name '*.parquet') $(find $RUNNER_TEMP/tv -name '*.parquet')
+      - name: The upload to S3, against MinIO
+        env:
+          AWS_ACCESS_KEY_ID: bndeskey
+          AWS_SECRET_ACCESS_KEY: bndessecret
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT_URL_S3: http://localhost:9000
+        run: |
+          docker run -d -p 9000:9000 -e MINIO_ROOT_USER=bndeskey -e MINIO_ROOT_PASSWORD=bndessecret minio/minio server /data
+          for i in $(seq 1 30); do curl -fs http://localhost:9000/minio/health/live && break; sleep 1; done
+          python -c "import boto3; boto3.client('s3').create_bucket(Bucket='bndes')"
+          S3_BUCKET_NAME=bndes tvpm run main --year 2023
+          python -c "import boto3; keys = [o['Key'] for o in boto3.client('s3').list_objects_v2(Bucket='bndes')['Contents']]; assert keys[0].endswith('balanco_patrimonial_2023_consolidado.parquet'), keys"

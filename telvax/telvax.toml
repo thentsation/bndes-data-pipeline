@@ -1,0 +1,9 @@
+[package]
+name = "bndes_pipeline"
+version = "0.1.0"
+edition = "2026"
+description = "BNDES balance sheets of a year, from the open-data API to one Parquet file on S3: the Telvax version of this repository"
+entry = "src/main.tvx"
+
+[dependencies]
+aws = "^0.1"

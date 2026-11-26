@@ -1,0 +1,6 @@
+# src/process_data.py: the description of every row without the spaces at its ends. `astype(str)` writes a missing one as
+# "None", and `dropna(how="all")` never drops a row here, since every row has its `_id`.
+from fetch import Base
+
+fn process_data(rows: List[Base]) -> List[Base]:
+    rows |> std.iter.map(r => Base(_id: r._id, descricao: Some(r.descricao.unwrap_or("None").trim())))

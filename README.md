@@ -21,6 +21,38 @@ make docker-run        # builds the Lambda image and runs it locally against LOC
 
 CI runs on GitHub Actions (see [CI/CD Pipeline](#cicd-pipeline)). `terraform plan`/`apply`/`destroy` stay manual, human-triggered actions against real AWS infrastructure - nothing in CI touches them.
 
+## Telvax version
+
+`telvax/` is this job written in [Telvax](https://github.com/telvax/telvax): the same API calls, the same consolidation, the
+same Parquet file under `bndes-data/YYYY/MM/DD/`, in `LOCAL_OUTPUT_DIR` or in the bucket of `S3_BUCKET_NAME` (with the
+[`aws`](https://github.com/telvax/aws) package), and the same answers (200, 400, 404, 500).
+
+```sh
+cd telvax
+LOCAL_OUTPUT_DIR=../output tvpm run main --year 2023      # the job
+telvax build --bundle src/main.tvx -o bndes && ./bndes --year 2023 --help
+docker build -f ../docker/Dockerfile.telvax -t bndes-telvax ..   # the Lambda image
+```
+
+On Lambda the image runs the job as a service behind the AWS Lambda Web Adapter. The schedule's event `{"year": 2023}`
+arrives as `POST /events`, and a request with the year in its body works as well. Terraform deploys it as it deploys the
+Python image: push it to the same ECR repository. The `schedule`, `monitoring` and `s3` modules do not change.
+
+**Checked against the Python job**
+* For 2021, 2023 and 2024, the two Parquet files have the same rows (1,157, 767 and 792), the same columns in the same
+  order, the same types (`int64` where pandas keeps whole numbers, `double` elsewhere), and the same value in every
+  cell (`telvax/compare_parquet.py`).
+* The upload was run against MinIO; a missing bucket gives the same 500 as the Python job.
+
+**How it differs from the Python**
+* The columns of a year are only known when the job runs, and a Telvax table has a fixed type. So the values go into a
+  long table, and a SQL query built at run time pivots it and writes the Parquet file (`COPY ... TO`).
+* Each numeric column is fetched once more (`fields=_id,<column>`) to know whether its values are whole numbers, which
+  decides `int64` against `double` as in pandas.
+
+`src/pipeline_test.tvx` has the tests, on answers of the API written in the test. `.github/workflows/telvax.yml` runs
+them, compares with the Python job, and uploads to MinIO.
+
 ## Overview
 
 This project provides automated access to the BNDES Balance Sheet data, which contains the bank's financial statements presented in three standards:
